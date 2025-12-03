@@ -29,4 +29,5 @@ export interface Task {
   priority: 'high' | 'medium' | 'low';
   dueDate?: string;
   dependencies?: string[];
+
 }
