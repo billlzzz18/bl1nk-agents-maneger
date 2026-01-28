@@ -7,7 +7,7 @@ pub struct AgentRegistry {
     active_tasks: HashMap<String, TaskInfo>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)] // เพิ่ม PartialEq, Eq เพื่อให้ง่ายต่อการ assert ในเทสต์
 pub struct TaskInfo {
     pub task_id: String,
     pub agent_id: String,
@@ -15,7 +15,7 @@ pub struct TaskInfo {
     pub status: TaskStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)] // เพิ่ม PartialEq, Eq เพื่อให้ง่ายต่อการ assert ในเทสต์
 pub enum TaskStatus {
     Pending,
     Running,
@@ -95,27 +95,97 @@ mod tests {
     use super::*;
     use crate::config::RateLimit;
 
-    #[test]
-    fn test_agent_registry() {
-        let agents = vec![
+    fn create_test_agents() -> Vec<AgentConfig> {
+        vec![
             AgentConfig {
-                id: "test1".to_string(),
-                name: "Test 1".to_string(),
+                id: "cli-agent".to_string(),
+                name: "CLI Agent".to_string(),
                 agent_type: "cli".to_string(),
-                command: Some("test".to_string()),
+                command: Some("test-cli".to_string()),
                 args: None,
                 extension_name: None,
-                rate_limit: RateLimit {
-                    requests_per_minute: 60,
-                    requests_per_day: 2000,
-                },
-                capabilities: vec!["test".to_string()],
+                rate_limit: RateLimit::default(),
+                capabilities: vec!["cli-task".to_string()],
                 priority: 1,
-            }
-        ];
+            },
+            // --- ส่วนที่เพิ่มเข้ามา: เพิ่ม Internal Agent ในชุดข้อมูลเทสต์ ---
+            AgentConfig {
+                id: "internal-pmat".to_string(),
+                name: "Internal PMAT Agent".to_string(),
+                agent_type: "internal".to_string(),
+                command: Some("pmat-internal".to_string()), // command ยังคงมีประโยชน์ในการระบุตัวตน
+                args: None,
+                extension_name: None,
+                rate_limit: RateLimit::default(),
+                capabilities: vec!["code-analysis".to_string()],
+                priority: 10, // ให้ priority สูงกว่า
+            },
+        ]
+    }
 
+    #[test]
+    fn test_agent_registry_creation() {
+        let agents = create_test_agents();
         let registry = AgentRegistry::new(agents);
-        assert_eq!(registry.list_agent_ids().len(), 1);
-        assert!(registry.get_agent("test1").is_some());
+
+        assert_eq!(registry.list_agent_ids().len(), 2);
+        assert!(registry.get_agent("cli-agent").is_some());
+        assert!(registry.get_agent("internal-pmat").is_some());
+    }
+
+    #[test]
+    fn test_get_agents_by_priority() {
+        let agents = create_test_agents();
+        let registry = AgentRegistry::new(agents);
+        let sorted_agents = registry.get_agents_by_priority();
+
+        assert_eq!(sorted_agents.len(), 2);
+        // ตรวจสอบว่า agent ที่มี priority สูงกว่า (10) มาก่อน
+        assert_eq!(sorted_agents[0].id, "internal-pmat");
+        assert_eq!(sorted_agents[1].id, "cli-agent");
+    }
+
+    #[test]
+    fn test_get_agents_by_capability() {
+        let agents = create_test_agents();
+        let registry = AgentRegistry::new(agents);
+
+        let cli_agents = registry.get_agents_by_capability("cli-task");
+        assert_eq!(cli_agents.len(), 1);
+        assert_eq!(cli_agents[0].id, "cli-agent");
+
+        let analysis_agents = registry.get_agents_by_capability("code-analysis");
+        assert_eq!(analysis_agents.len(), 1);
+        assert_eq!(analysis_agents[0].id, "internal-pmat");
+
+        let non_existent_agents = registry.get_agents_by_capability("non-existent");
+        assert!(non_existent_agents.is_empty());
+    }
+
+    #[test]
+    fn test_task_management() {
+        let agents = create_test_agents();
+        let mut registry = AgentRegistry::new(agents);
+
+        let task_info = TaskInfo {
+            task_id: "task-123".to_string(),
+            agent_id: "internal-pmat".to_string(),
+            task_type: "code-analysis".to_string(),
+            status: TaskStatus::Pending,
+        };
+
+        registry.register_task(task_info.clone());
+        assert_eq!(registry.active_task_count(), 1);
+
+        registry.update_task_status("task-123", TaskStatus::Running).unwrap();
+        let updated_task = registry.active_tasks.get("task-123").unwrap();
+        assert_eq!(updated_task.status, TaskStatus::Running);
+        assert_eq!(registry.active_task_count(), 1);
+
+        registry.update_task_status("task-123", TaskStatus::Completed).unwrap();
+        assert_eq!(registry.active_task_count(), 0);
+
+        registry.cleanup_finished_tasks();
+        assert!(registry.active_tasks.get("task-123").is_none());
     }
 }
