@@ -1,16 +1,33 @@
 [package]
 name = "gemini-mcp-proxy"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["billlzzz1808 <billlzzz1808@gmail.com>"]
-description = "Dual-mode MCP/ACP orchestrator for multi-agent systems"
+description = "Dual-mode MCP/ACP orchestrator for multi-agent systems, with optional bundled PMAT."
 license = "MIT"
 
+# --- ส่วนที่เพิ่มเข้ามา: การกำหนด Features ---
 [features]
+# ค่าเริ่มต้นจะยังคงเหมือนเดิม เพื่อให้ไบนารีมีขนาดเล็กและคอมไพล์เร็ว
 default = ["schema-generation"]
+
+# ฟีเจอร์สำหรับเปิดใช้งาน JSON schema generation ของ pmcp
 schema-generation = ["pmcp/schema-generation"]
+
+# ฟีเจอร์สำหรับเปิดใช้งาน property-based testing
 proptest = ["dep:proptest"]
 
+# *** ฟีเจอร์ใหม่สำหรับรวม pmat เข้ามาในไบนารี ***
+# เมื่อเปิดใช้ฟีเจอร์นี้ มันจะไปเปิดใช้งาน optional dependency ที่ชื่อ `pmat-core`
+bundle-pmat = ["dep:pmat-core"]
+
+# *** (แนะนำ) ฟีเจอร์เพื่อความสะดวก: bundle-pmat-full ***
+# ฟีเจอร์นี้จะเปิดใช้ `bundle-pmat` และเปิดใช้ฟีเจอร์ 'full' ของ pmat-core อีกที
+# ทำให้ได้ pmat เวอร์ชันเต็มความสามารถ (รองรับทุกภาษา) ในไบนารีเดียว
+bundle-pmat-full = ["bundle-pmat", "pmat-core/full"]
+
+
+# --- ส่วน Dependencies เดิมและส่วนที่เพิ่มเข้ามา ---
 [dependencies]
 # Protocol implementations
 pmcp = { version = "1.8", features = ["schema-generation"] }
@@ -49,6 +66,13 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 
 # Optional testing
 proptest = { version = "1.0", optional = true }
+
+# --- ส่วนที่เพิ่มเข้ามา: Optional Dependency สำหรับ PMAT ---
+# `optional = true` คือหัวใจสำคัญของแนวทางนี้
+# มันจะถูกดาวน์โหลดและคอมไพล์ก็ต่อเมื่อมีฟีเจอร์อื่น (เช่น `bundle-pmat`) เรียกใช้เท่านั้น
+pmat-core = { version = "2.214.0", optional = true, default-features = false }
+# หมายเหตุ: เราใช้ `default-features = false` เพื่อควบคุมฟีเจอร์ของ pmat เองได้ละเอียดขึ้น
+
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.60.2", features = ["Win32_Storage_FileSystem"] }
