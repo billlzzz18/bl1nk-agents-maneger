@@ -1,16 +1,17 @@
 # Gemini MCP Proxy
 
-**Dual-mode MCP/ACP orchestrator for multi-agent systems with Gemini CLI**
+**Dual-mode MCP/ACP orchestrator for multi-agent systems, with an intelligent routing engine and optional bundled PMAT.**
 
 ## Overview
 
 This project implements an **Agent Community Protocol (ACP)** orchestrator that:
 
-- **Acts as MCP Server** - Exposes tools to Gemini CLI via Model Context Protocol
-- **Acts as ACP Client** - Communicates with sub-agents using Agent Client Protocol
-- **Routes intelligently** - Selects optimal agents based on task type and capabilities
-- **Manages rate limits** - Tracks usage per agent (2000/day, 60/min)
-- **Runs background tasks** - Delegates long-running tasks asynchronously
+-   **Acts as MCP Server** - Exposes tools to Gemini CLI via Model Context Protocol.
+-   **Acts as ACP Client** - Communicates with sub-agents using Agent Client Protocol.
+-   **Routes Intelligently** - Selects the optimal agent using a powerful, tiered priority-based policy engine.
+-   **Manages Rate Limits** - Tracks usage per agent with configurable limits.
+-   **Runs Background Tasks** - Delegates long-running tasks asynchronously.
+-   **Includes Bundled PMAT (Optional)** - Provides zero-configuration, high-performance code analysis out-of-the-box.
 
 ## Architecture
 
@@ -29,42 +30,41 @@ This project implements an **Agent Community Protocol (ACP)** orchestrator that:
 │  │  - agent_status                        │  │
 │  └────────────────────────────────────────┘  │
 │  ┌────────────────────────────────────────┐  │
-│  │ ACP Client Interface                   │  │
-│  │  - Spawn sub-agents via CLI            │  │
-│  │  - JSON-RPC 2.0 over stdio             │  │
+│  │ Intelligent Routing Engine             │  │
+│  │  - Tiered Priority System              │  │
+│  └────────────────────────────────────────┘  │
+│  ┌────────────────────────────────────────┐  │
+│  │ ACP Client / Internal Agent Executor   │  │
+│  │  - Spawn external agents via CLI       │  │
+│  │  - Call bundled agents (PMAT) directly │  │
 │  └────────────────────────────────────────┘  │
 └────────────┬─────────────────────────────────┘
              │ ACP Protocol (JSON-RPC 2.0)
              ↓
 ┌──────────────────────────────────────────────┐
 │  Sub-Agents (Each is MCP/ACP Server)        │
-│  - qwencode, codex, jules, etc.             │
-│  - Can call back to orchestrator            │
+│  - qwencode, codex, jules, pmat, etc.       │
 └──────────────────────────────────────────────┘
 ```
 
 ## Key Concepts
 
-### ACP (Agent Community Protocol)
+### Intelligent Routing Engine
 
-> **"Every Agent is an MCP Server that can call and be called by peers"**
+Inspired by the Gemini CLI's policy engine, our router uses a sophisticated priority system to select the best agent for any given task.
 
-- All agents communicate via JSON-RPC 2.0
-- Bidirectional communication (agents can call each other)
-- No central API keys - uses session tokens
-- Rate limits are transparent (sent in responses)
+-   **Tiered Rules**: Rules can be organized into `admin`, `user`, and `default` tiers, ensuring that more critical rules are always evaluated first.
+-   **Rule Priority**: Within each tier, rules are assigned a priority from 0-999. The rule with the highest priority wins.
+-   **Ordered Fallback**: Each rule can specify an ordered list of `preferred_agents`, creating a fallback chain (e.g., "try Agent A, if not available, try Agent B").
+-   **Agent Priority Fallback**: If no rule finds an available agent, the system falls back to selecting the highest-priority available agent.
 
-### Technologies Used
+### Bundled PMAT Agent
 
-1. **PMCP (Pragmatic MCP)** - High-performance Rust MCP implementation
-   - TypedTool for type-safe tool definitions
-   - Multiple transports (stdio, HTTP, WebSocket)
-   - 16x faster than TypeScript SDK
+This project can be compiled with an optional `bundle-pmat` feature flag. When enabled, it embeds the powerful **PMAT** code analysis engine directly into the binary.
 
-2. **ACP (Agent Client Protocol)** - Agent-to-agent communication
-   - JSON-RPC 2.0 over stdio
-   - Supports AsyncRead/AsyncWrite
-   - Session-based authentication
+-   **Zero-Configuration**: Provides instant access to code analysis, context generation, and technical debt grading without needing to install a separate `pmat` CLI.
+-   **High Performance**: Executes as a direct library call, eliminating process spawning overhead for maximum speed.
+-   **Seamless Integration**: The bundled agent is automatically registered and can be targeted by the routing engine just like any external agent.
 
 ## Installation
 
@@ -80,69 +80,99 @@ git clone <your-repo-url>
 cd gemini-mcp-proxy
 ```
 
-### Build
+### Build Options
+
+Choose the version that best fits your needs.
+
+**1. Standard Build (Lightweight)**
+
+Compiles quickly and results in a smaller binary. Requires external agents (like `pmat` CLI) to be installed on the system.
 
 ```bash
-# Development build
-cargo build
-
-# Release build (optimized)
 cargo build --release
 ```
 
-### Configuration
+**2. Bundled PMAT Build (Recommended)**
 
-Create `~/.config/gemini-mcp-proxy/config.toml`:
+Includes the PMAT code analysis engine directly in the binary for zero-configuration, high-performance analysis.
+
+```bash
+cargo build --release --features bundle-pmat
+```
+
+**3. Bundled PMAT Full Build**
+
+Includes the full version of PMAT with support for all 17+ programming languages.
+
+```bash
+cargo build --release --features bundle-pmat-full
+```
+
+## Configuration
+
+Create `~/.config/gemini-mcp-proxy/config.toml` with your agent definitions and routing rules.
 
 ```toml
+# ~/.config/gemini-mcp-proxy/config.toml
+
 [server]
 host = "127.0.0.1"
 port = 3000
-max_concurrent_tasks = 5
 
-[main_agent]
-name = "gemini"
-type = "gemini-cli"
-
-# Define your sub-agents
+# --- Agent Definitions ---
+# The bundled PMAT agent is added automatically if the feature is enabled.
+# You only need to define your external agents here.
 [[agents]]
 id = "qwen-coder"
 name = "Qwen Code Assistant"
 type = "cli"
 command = "qwencode"
 args = ["--mode", "agent"]
-rate_limit = { requests_per_minute = 60, requests_per_day = 2000 }
 capabilities = ["code-generation", "refactoring"]
-priority = 1
+priority = 150 # Agent's own priority, used as a fallback
 
 [[agents]]
-id = "codex"
-name = "Codex"
-type = "cli"
-command = "codex"
-rate_limit = { requests_per_minute = 60, requests_per_day = 2000 }
-capabilities = ["code-completion"]
-priority = 2
+id = "jules-agent"
+name = "Jules Extension"
+type = "gemini-extension"
+extension_name = "jules"
+capabilities = ["research", "analysis"]
+priority = 120
 
-# Routing rules
+# --- Intelligent Routing Engine Configuration ---
+[routing]
+# Set the tier for this config file ('user', 'admin', or 'default')
+tier = "user"
+
+# Rule for all code analysis tasks
+[[routing.rules]]
+task_type = "code-analysis"
+keywords = ["analyze", "review", "grade", "understand"]
+# Always prefer the high-performance bundled PMAT agent first.
+preferred_agents = ["pmat-architect-internal", "jules-agent"]
+priority = 900 # High priority to ensure this rule is matched first
+
+# Rule for Rust-specific code generation
+[[routing.rules]]
+task_type = "code-generation"
+keywords = ["rust", "cargo", "macro"]
+preferred_agents = ["qwen-coder", "pmat-architect-internal"]
+priority = 250 # Higher priority than the generic rule below
+
+# Generic rule for code generation
 [[routing.rules]]
 task_type = "code-generation"
 keywords = ["write code", "implement"]
 preferred_agents = ["qwen-coder"]
+priority = 200
 
-[[routing.rules]]
-task_type = "background-task"
-keywords = ["npm install", "build"]
-preferred_agents = ["codex"]
-
+# --- Other Settings ---
 [rate_limiting]
-strategy = "round-robin"
 track_usage = true
 usage_db_path = "~/.config/gemini-mcp-proxy/usage.db"
 
 [logging]
-level = "info"
-output = "stdout"
+level = "info" # Use "debug" or "trace" for more details
 ```
 
 ## Usage
@@ -150,25 +180,26 @@ output = "stdout"
 ### Run as MCP Server
 
 ```bash
-# Run with default config
-cargo run --release
+# Run with default config (~/.config/gemini-mcp-proxy/config.toml)
+# Use the binary that matches your build choice (standard or bundled)
+./target/release/gemini-mcp-proxy
 
-# With custom config
-cargo run --release -- --config /path/to/config.toml
+# With a custom config path
+./target/release/gemini-mcp-proxy --config /path/to/your/config.toml
 
-# Enable debug logging
-RUST_LOG=debug cargo run --release
+# Enable detailed logging for debugging the routing engine
+RUST_LOG=trace ./target/release/gemini-mcp-proxy
 ```
 
 ### Integrate with Gemini CLI
 
-Add to Gemini CLI's MCP config:
+Add to your Gemini CLI's MCP configuration:
 
 ```json
 {
   "mcpServers": {
     "gemini-proxy": {
-      "command": "/path/to/gemini-mcp-proxy",
+      "command": "/path/to/your/target/release/gemini-mcp-proxy",
       "args": [],
       "transport": "stdio"
     }
@@ -178,18 +209,20 @@ Add to Gemini CLI's MCP config:
 
 ### Available Tools
 
+The proxy exposes two primary tools to the Gemini CLI:
+
 #### 1. `delegate_task`
 
-Delegate a task to an appropriate sub-agent.
+Delegates a task to the most appropriate sub-agent based on the routing rules.
 
 **Arguments:**
 ```json
 {
-  "task_type": "code-generation",
-  "prompt": "Write a function to calculate fibonacci",
-  "agent_id": "qwen-coder",  // Optional
-  "background": false,        // Optional
-  "context": {}               // Optional
+  "task_type": "code-analysis",
+  "prompt": "Review this project for technical debt and suggest improvements.",
+  "agent_id": "pmat-architect-internal",  // Optional: bypass routing and force a specific agent
+  "background": false,                   // Optional
+  "context": {}                          // Optional
 }
 ```
 
@@ -197,7 +230,7 @@ Delegate a task to an appropriate sub-agent.
 ```json
 {
   "task_id": "uuid-here",
-  "agent_id": "qwen-coder",
+  "agent_id": "pmat-architect-internal",
   "status": "completed",
   "result": "..."
 }
@@ -205,7 +238,7 @@ Delegate a task to an appropriate sub-agent.
 
 #### 2. `agent_status`
 
-Query agent and task status.
+Queries the status of agents and tasks.
 
 **Arguments:**
 ```json
@@ -218,44 +251,49 @@ Query agent and task status.
 ```json
 {
   "active_tasks": 3,
-  "available_agents": ["qwen-coder", "codex"],
+  "available_agents": ["pmat-architect-internal", "qwen-coder", "jules-agent"],
   "task_info": { ... }
 }
 ```
 
 ## Example Workflows
 
-### 1. Delegate Code Generation
+### 1. Intelligent Code Analysis
+
+```
+Gemini CLI → delegate_task(
+  task_type: "code-analysis",
+  prompt: "Grade the technical debt in this codebase."
+)
+↓
+Proxy's Routing Engine evaluates rules.
+↓
+Finds a high-priority (900) rule for "code-analysis".
+↓
+Selects "pmat-architect-internal" from the preferred list.
+↓
+Executes PMAT as a direct, in-process library call.
+↓
+Returns a detailed analysis report to Gemini.
+```
+
+### 2. Context-Specific Code Generation
 
 ```
 Gemini CLI → delegate_task(
   task_type: "code-generation",
-  prompt: "Create a REST API handler"
+  prompt: "Write a new Rust macro for me."
 )
 ↓
-Proxy selects qwen-coder (via routing rules)
+Proxy's Routing Engine evaluates rules.
+↓
+Matches the "rust" keyword in a rule with priority 250.
+↓
+Selects "qwen-coder" as the first choice.
 ↓
 Spawns: qwencode --mode agent
 ↓
-Sends ACP request via stdio
-↓
-Returns result to Gemini
-```
-
-### 2. Background Task
-
-```
-Gemini CLI → delegate_task(
-  task_type: "background-task",
-  prompt: "npm install",
-  background: true
-)
-↓
-Proxy spawns task in background
-↓
-Returns immediately with task_id
-↓
-Task runs asynchronously
+Sends ACP request via stdio and returns the result.
 ```
 
 ## Development
@@ -264,16 +302,16 @@ Task runs asynchronously
 
 ```
 src/
-├── main.rs              # Entry point
-├── config.rs            # TOML config loading
+├── main.rs              # Entry point, CLI parsing
+├── config.rs            # TOML config loading and injection logic
 ├── mcp/
-│   └── mod.rs          # MCP server (PMCP)
+│   └── mod.rs           # MCP server implementation (PMCP)
 ├── agents/
 │   ├── mod.rs
-│   ├── registry.rs     # Agent management
-│   ├── router.rs       # Task routing
-│   └── executor.rs     # ACP execution
-└── rate_limit.rs       # Rate limiting
+│   ├── registry.rs      # Agent management
+│   ├── router.rs        # The Intelligent Routing Engine
+│   └── executor.rs      # Internal/External agent execution logic
+└── rate_limit.rs        # Rate limiting tracker
 ```
 
 ### Testing
@@ -282,77 +320,41 @@ src/
 # Run all tests
 cargo test
 
-# Run specific test
-cargo test test_agent_registry
+# Run tests for a specific module
+cargo test --package gemini-mcp-proxy -- --test-threads=1 agents::router
 
-# With logging
-RUST_LOG=debug cargo test -- --nocapture
+# Run tests with detailed logging
+RUST_LOG=trace cargo test -- --nocapture
 ```
-
-### Adding New Agents
-
-1. Add to `config.toml`:
-```toml
-[[agents]]
-id = "my-new-agent"
-name = "My Agent"
-type = "cli"
-command = "my-agent-cli"
-capabilities = ["my-capability"]
-priority = 1
-rate_limit = { requests_per_minute = 60, requests_per_day = 2000 }
-```
-
-2. Add routing rule (optional):
-```toml
-[[routing.rules]]
-task_type = "my-task"
-keywords = ["my keyword"]
-preferred_agents = ["my-new-agent"]
-```
-
-3. Restart proxy
-
-## Rate Limiting
-
-Each agent has configurable rate limits:
-
-- **Per-minute**: 60 requests (default)
-- **Per-day**: 2000 requests (default)
-
-Limits are tracked automatically and enforced before task execution.
 
 ## Troubleshooting
 
 ### Agent not spawning
 
 Check:
-1. Command exists in PATH: `which qwencode`
-2. Agent accepts stdio: `echo '{"jsonrpc":"2.0","id":1}' | qwencode`
-3. Logs: `RUST_LOG=debug cargo run`
+1.  **Command in PATH**: `which qwencode`
+2.  **Agent accepts stdio**: `echo '{"jsonrpc":"2.0","id":1}' | qwencode`
+3.  **Logs**: `RUST_LOG=debug ./target/release/gemini-mcp-proxy`
+
+### Routing issues
+
+-   Run with `RUST_LOG=trace` to see detailed logs from the routing engine, including which rules were matched and why an agent was selected.
+-   Verify your `task_type` and `keywords` in `config.toml` match the `delegate_task` arguments.
 
 ### Rate limit errors
 
-Check usage:
-```rust
-// Use agent_status tool
-{
-  "task_id": null
-}
-```
-
-Reset limits (development only):
+Check current usage with the `agent_status` tool. To reset limits during development:
 ```bash
 rm ~/.config/gemini-mcp-proxy/usage.db
 ```
 
 ## Contributing
 
-1. Fork the repository
-2. Create feature branch
-3. Make changes
-4. Run tests: `cargo test`
-5. Submit PR
+1.  Fork the repository
+2.  Create a feature branch (`git checkout -b feature/my-new-feature`)
+3.  Make your changes
+4.  Run tests: `cargo test`
+5.  Submit a Pull Request
 
 ## License
 
@@ -360,10 +362,11 @@ MIT
 
 ## Credits
 
-- **PMCP** - <https://github.com/paiml/rust-mcp-sdk>
-- **ACP** - Agent Client Protocol concept
-- **MCP** - <https://modelcontextprotocol.io>
+-   **PMAT** - The bundled code analysis engine.
+-   **PMCP** - High-performance Rust MCP SDK.
+-   **ACP** - The agent-to-agent communication protocol concept.
+-   **MCP** - The Model Context Protocol standard.
 
 ---
 
-**Built with 🦀 Rust for maximum performance and safety**
+**Built with 🦀 Rust for maximum performance, safety, and flexibility.**
