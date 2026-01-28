@@ -10,6 +10,13 @@ use tokio::io::{AsyncWriteExt, AsyncBufReadExt, BufReader};
 use serde_json::Value;
 use uuid::Uuid;
 
+// --- ส่วนที่เพิ่มเข้ามา: Conditional Import ---
+// บรรทัดนี้จะถูกคอมไพล์ก็ต่อเมื่อฟีเจอร์ `bundle-pmat` ถูกเปิดใช้งาน
+// เราจะสมมติว่า pmat-core มีฟังก์ชัน `run_context_analysis` ที่รับ prompt และคืนค่า Result<String>
+#[cfg(feature = "bundle-pmat")]
+use pmat_core::run_context_analysis;
+
+
 pub struct AgentExecutor {
     agent_registry: Arc<RwLock<AgentRegistry>>,
     rate_limiter: Arc<RwLock<RateLimitTracker>>,
@@ -23,7 +30,7 @@ impl AgentExecutor {
         routing_config: RoutingConfig,
     ) -> Self {
         let router = AgentRouter::new(routing_config);
-        
+
         Self {
             agent_registry,
             rate_limiter,
@@ -38,7 +45,7 @@ impl AgentExecutor {
 
         // Select agent
         let registry = self.agent_registry.read().await;
-        
+
         let agent = if let Some(agent_id) = &args.agent_id {
             registry.get_agent(agent_id)
                 .ok_or_else(|| pmcp::Error::validation(format!("Agent not found: {}", agent_id)))?
@@ -46,14 +53,14 @@ impl AgentExecutor {
             // Auto-select based on task_type
             let all_agents = registry.get_agents_by_priority();
             let agent_refs: Vec<&AgentConfig> = all_agents.iter().copied().collect();
-            
+
             self.router.select_agent(&args.task_type, &args.prompt, &agent_refs)
                 .map_err(|e| pmcp::Error::internal(e.to_string()))?
         };
 
         let agent_id = agent.id.clone();
         let agent_config = agent.clone();
-        
+
         // Register task
         drop(registry);
         let mut registry = self.agent_registry.write().await;
@@ -129,9 +136,22 @@ impl AgentExecutor {
 
         tracing::info!("Executing task {} on agent {}", task_id, agent.id);
 
+        // --- ส่วนที่แก้ไข: เพิ่มการจัดการ Agent ประเภทใหม่ ---
+        // เราจะเพิ่ม agent_type ใหม่ชื่อ "internal" สำหรับ pmat ที่บันเดิลมาด้วย
         let result = match agent.agent_type.as_str() {
             "cli" => self.execute_cli_agent(&agent, &prompt, context).await,
             "gemini-extension" => self.execute_gemini_extension(&agent, &prompt).await,
+            
+            // --- ตรรกะใหม่สำหรับ Internal Agent ---
+            "internal" => {
+                // ตรวจสอบว่า command คือ pmat หรือไม่ (เพื่อความปลอดภัย)
+                if agent.command.as_deref() == Some("pmat-internal") {
+                    self.execute_internal_pmat_agent(&prompt).await
+                } else {
+                    bail!("Unsupported internal agent: {:?}", agent.command)
+                }
+            },
+
             _ => bail!("Unsupported agent type: {}", agent.agent_type),
         };
 
@@ -144,6 +164,30 @@ impl AgentExecutor {
 
         result
     }
+
+    // --- ฟังก์ชันใหม่: สำหรับเรียกใช้ pmat ที่บันเดิลมา ---
+    // ฟังก์ชันนี้จะถูกคอมไพล์ก็ต่อเมื่อฟีเจอร์ `bundle-pmat` ถูกเปิดใช้งาน
+    #[cfg(feature = "bundle-pmat")]
+    async fn execute_internal_pmat_agent(&self, prompt: &str) -> Result<String> {
+        tracing::debug!("Executing bundled PMAT agent with prompt: {}", prompt);
+        
+        // นี่คือจุดที่เราเรียกใช้ฟังก์ชันจาก pmat-core library โดยตรง
+        // เราสมมติว่า pmat-core มีฟังก์ชัน `run_context_analysis` ที่ทำงานแบบ async
+        // และคืนค่าเป็น Result<String, pmat_core::Error>
+        // เราต้องแปลง Error ของ pmat ให้เป็น anyhow::Error
+        let result = run_context_analysis(prompt).await.map_err(|e| anyhow::anyhow!(e.to_string()))?;
+        
+        Ok(result)
+    }
+
+    // --- ฟังก์ชันสำรอง (Fallback): เมื่อไม่ได้เปิดฟีเจอร์ `bundle-pmat` ---
+    // ฟังก์ชันนี้จะถูกคอมไพล์เมื่อ *ไม่ได้* เปิดฟีเจอร์ `bundle-pmat`
+    // มันจะคืนค่าเป็น Error เสมอ เพื่อป้องกันการเรียกใช้ Agent ที่ไม่มีอยู่จริง
+    #[cfg(not(feature = "bundle-pmat"))]
+    async fn execute_internal_pmat_agent(&self, _prompt: &str) -> Result<String> {
+        bail!("Internal PMAT agent called, but the 'bundle-pmat' feature is not enabled. Please compile with --features bundle-pmat or use the CLI version of pmat.")
+    }
+
 
     /// Execute CLI-based agent using ACP over stdio
     async fn execute_cli_agent(
@@ -169,16 +213,15 @@ impl AgentExecutor {
         let stdout = child.stdout.take().context("Failed to get stdout")?;
 
         // Send ACP request (JSON-RPC 2.0)
+        // *** แก้ไขเล็กน้อย: ส่ง prompt ไปใน arguments โดยตรงตามที่ pmat คาดหวัง ***
         let acp_request = serde_json::json!({
             "jsonrpc": "2.0",
             "id": 1,
-            "method": "tools/call",
+            "method": "context", // สมมติว่า pmat รับ method `context`
             "params": {
-                "name": "execute_task",
-                "arguments": {
-                    "prompt": prompt,
-                    "context": context,
-                }
+                "prompt": prompt,
+                "context": context,
+                "format": "llm-optimized" // อาจจะใส่ค่า default ที่ดีไปเลย
             }
         });
 
@@ -209,15 +252,21 @@ impl AgentExecutor {
     async fn read_from_agent(&self, stdout: ChildStdout) -> Result<String> {
         let mut reader = BufReader::new(stdout);
         let mut line = String::new();
-        
+
         reader.read_line(&mut line).await?;
-        
+
         let response: Value = serde_json::from_str(&line)
             .context("Failed to parse agent response")?;
 
         // Extract result from JSON-RPC response
         if let Some(result) = response.get("result") {
-            Ok(result.to_string())
+            // ผลลัพธ์จาก pmat อาจจะเป็น JSON object ที่มี context อยู่ข้างใน หรือเป็น string ตรงๆ
+            // ทำให้มันเป็น string เสมอเพื่อความเข้ากันได้
+            if result.is_string() {
+                Ok(result.as_str().unwrap().to_string())
+            } else {
+                Ok(result.to_string())
+            }
         } else if let Some(error) = response.get("error") {
             bail!("Agent returned error: {}", error);
         } else {
