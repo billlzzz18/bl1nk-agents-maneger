@@ -1,4 +1,4 @@
-use crate::config::RateLimitingConfig;
+use crate::config::{RateLimitingConfig, RateLimit}; // เพิ่ม RateLimit เข้ามา
 use std::collections::HashMap;
 use chrono::{DateTime, Utc, Duration};
 
@@ -30,13 +30,13 @@ impl AgentUsage {
         let now = Utc::now();
 
         // Reset daily counter
-        if now.signed_duration_since(self.day_start) > Duration::days(1) {
+        if now.signed_duration_since(self.day_start) >= Duration::days(1) { // ใช้ >= เพื่อความแน่นอน
             self.requests_today = 0;
             self.day_start = now;
         }
 
         // Reset minute counter
-        if now.signed_duration_since(self.minute_start) > Duration::minutes(1) {
+        if now.signed_duration_since(self.minute_start) >= Duration::minutes(1) { // ใช้ >= เพื่อความแน่นอน
             self.requests_this_minute = 0;
             self.minute_start = now;
         }
@@ -51,25 +51,37 @@ impl RateLimitTracker {
         }
     }
 
-    /// Check if agent can make a request and increment counter if yes
-    pub async fn check_and_increment(&mut self, agent_id: &str) -> bool {
+    /// Check if agent can make a request and increment counter if yes.
+    /// This now takes the agent's specific rate limit configuration.
+    pub async fn check_and_increment(&mut self, agent_id: &str, agent_limit: &RateLimit) -> bool {
+        // ถ้าไม่ได้เปิดใช้งานการติดตาม rate limit ก็ให้ผ่านเสมอ
+        if !self.config.track_usage {
+            return true;
+        }
+
         let usage = self.usage
             .entry(agent_id.to_string())
             .or_insert_with(AgentUsage::new);
 
         usage.reset_if_needed();
 
-        // Check limits (hardcoded for now, should come from agent config)
-        let daily_limit = 2000u32;
-        let minute_limit = 60u32;
+        // --- ส่วนที่แก้ไข: ใช้ค่า limit จากพารามิเตอร์ที่ส่งเข้ามา ---
+        let daily_limit = agent_limit.requests_per_day;
+        let minute_limit = agent_limit.requests_per_minute;
 
         if usage.requests_today >= daily_limit {
-            tracing::warn!("Agent {} hit daily rate limit", agent_id);
+            tracing::warn!(
+                "Agent {} hit daily rate limit ({} requests)", 
+                agent_id, daily_limit
+            );
             return false;
         }
 
         if usage.requests_this_minute >= minute_limit {
-            tracing::warn!("Agent {} hit per-minute rate limit", agent_id);
+            tracing::warn!(
+                "Agent {} hit per-minute rate limit ({} requests)", 
+                agent_id, minute_limit
+            );
             return false;
         }
 
@@ -78,10 +90,12 @@ impl RateLimitTracker {
         usage.requests_this_minute += 1;
 
         tracing::debug!(
-            "Agent {} usage: {}/day, {}/min",
+            "Agent {} usage: {}/{} per day, {}/{} per minute",
             agent_id,
             usage.requests_today,
-            usage.requests_this_minute
+            daily_limit,
+            usage.requests_this_minute,
+            minute_limit
         );
 
         true
@@ -105,17 +119,23 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_rate_limiting() {
+    async fn test_rate_limiting_with_specific_limits() {
         let config = RateLimitingConfig {
             strategy: "round-robin".to_string(),
             track_usage: true,
-            usage_db_path: "/tmp/test.db".to_string(),
+            usage_db_path: None, // แก้ไขให้เป็น Option ตาม config.rs
         };
 
         let mut tracker = RateLimitTracker::new(config);
+        
+        // กำหนด limit สำหรับ agent นี้โดยเฉพาะ
+        let agent_limit = RateLimit {
+            requests_per_minute: 10,
+            requests_per_day: 100,
+        };
 
         // First request should succeed
-        assert!(tracker.check_and_increment("test-agent").await);
+        assert!(tracker.check_and_increment("test-agent", &agent_limit).await);
 
         // Check usage
         let (daily, minute) = tracker.get_usage("test-agent").unwrap();
@@ -124,21 +144,48 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_minute_limit() {
+    async fn test_minute_limit_is_enforced() {
         let config = RateLimitingConfig {
             strategy: "round-robin".to_string(),
             track_usage: true,
-            usage_db_path: "/tmp/test.db".to_string(),
+            usage_db_path: None,
         };
 
         let mut tracker = RateLimitTracker::new(config);
 
+        let agent_limit = RateLimit {
+            requests_per_minute: 5, // ใช้ limit ที่น้อยลงเพื่อเทสต์ได้เร็วขึ้น
+            requests_per_day: 100,
+        };
+
         // Exhaust minute limit
-        for _ in 0..60 {
-            assert!(tracker.check_and_increment("test-agent").await);
+        for i in 0..5 {
+            assert!(
+                tracker.check_and_increment("test-agent", &agent_limit).await,
+                "Request {} should have succeeded", i + 1
+            );
         }
 
-        // 61st request should fail
-        assert!(!tracker.check_and_increment("test-agent").await);
+        // 6th request should fail
+        assert!(
+            !tracker.check_and_increment("test-agent", &agent_limit).await,
+            "The 6th request should have been rate limited"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_tracking_disabled() {
+        let config = RateLimitingConfig {
+            strategy: "round-robin".to_string(),
+            track_usage: false, // ปิดการติดตาม
+            usage_db_path: None,
+        };
+
+        let mut tracker = RateLimitTracker::new(config);
+        let agent_limit = RateLimit { requests_per_minute: 1, requests_per_day: 1 };
+
+        // ควรจะผ่านเสมอแม้ว่าจะเกิน limit
+        assert!(tracker.check_and_increment("test-agent", &agent_limit).await);
+        assert!(tracker.check_and_increment("test-agent", &agent_limit).await);
     }
 }
