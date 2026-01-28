@@ -10,11 +10,9 @@ use tokio::io::{AsyncWriteExt, AsyncBufReadExt, BufReader};
 use serde_json::Value;
 use uuid::Uuid;
 
-// --- ส่วนที่เพิ่มเข้ามา: Conditional Import ---
-// บรรทัดนี้จะถูกคอมไพล์ก็ต่อเมื่อฟีเจอร์ `bundle-pmat` ถูกเปิดใช้งาน
-// เราจะสมมติว่า pmat-core มีฟังก์ชัน `run_context_analysis` ที่รับ prompt และคืนค่า Result<String>
+// Conditional Import for bundled pmat
 #[cfg(feature = "bundle-pmat")]
-use pmat_core::run_context_analysis;
+use pmat_core::run_context_analysis; // สมมติว่า pmat-core มีฟังก์ชันนี้
 
 
 pub struct AgentExecutor {
@@ -72,9 +70,11 @@ impl AgentExecutor {
         });
         drop(registry);
 
+        // --- ส่วนที่แก้ไข: อัปเดตการเรียกใช้ Rate Limiter ---
         // Check rate limit
         let mut rate_limiter = self.rate_limiter.write().await;
-        if !rate_limiter.check_and_increment(&agent_id).await {
+        // เราส่ง agent_config.rate_limit เข้าไปด้วย
+        if !rate_limiter.check_and_increment(&agent_id, &agent_config.rate_limit).await {
             return Err(pmcp::Error::custom(
                 -32000, // RATE_LIMIT_EXCEEDED
                 format!("Rate limit exceeded for agent: {}", agent_id)
@@ -136,22 +136,16 @@ impl AgentExecutor {
 
         tracing::info!("Executing task {} on agent {}", task_id, agent.id);
 
-        // --- ส่วนที่แก้ไข: เพิ่มการจัดการ Agent ประเภทใหม่ ---
-        // เราจะเพิ่ม agent_type ใหม่ชื่อ "internal" สำหรับ pmat ที่บันเดิลมาด้วย
         let result = match agent.agent_type.as_str() {
             "cli" => self.execute_cli_agent(&agent, &prompt, context).await,
             "gemini-extension" => self.execute_gemini_extension(&agent, &prompt).await,
-            
-            // --- ตรรกะใหม่สำหรับ Internal Agent ---
             "internal" => {
-                // ตรวจสอบว่า command คือ pmat หรือไม่ (เพื่อความปลอดภัย)
                 if agent.command.as_deref() == Some("pmat-internal") {
                     self.execute_internal_pmat_agent(&prompt).await
                 } else {
                     bail!("Unsupported internal agent: {:?}", agent.command)
                 }
             },
-
             _ => bail!("Unsupported agent type: {}", agent.agent_type),
         };
 
@@ -165,31 +159,18 @@ impl AgentExecutor {
         result
     }
 
-    // --- ฟังก์ชันใหม่: สำหรับเรียกใช้ pmat ที่บันเดิลมา ---
-    // ฟังก์ชันนี้จะถูกคอมไพล์ก็ต่อเมื่อฟีเจอร์ `bundle-pmat` ถูกเปิดใช้งาน
     #[cfg(feature = "bundle-pmat")]
     async fn execute_internal_pmat_agent(&self, prompt: &str) -> Result<String> {
         tracing::debug!("Executing bundled PMAT agent with prompt: {}", prompt);
-        
-        // นี่คือจุดที่เราเรียกใช้ฟังก์ชันจาก pmat-core library โดยตรง
-        // เราสมมติว่า pmat-core มีฟังก์ชัน `run_context_analysis` ที่ทำงานแบบ async
-        // และคืนค่าเป็น Result<String, pmat_core::Error>
-        // เราต้องแปลง Error ของ pmat ให้เป็น anyhow::Error
         let result = run_context_analysis(prompt).await.map_err(|e| anyhow::anyhow!(e.to_string()))?;
-        
         Ok(result)
     }
 
-    // --- ฟังก์ชันสำรอง (Fallback): เมื่อไม่ได้เปิดฟีเจอร์ `bundle-pmat` ---
-    // ฟังก์ชันนี้จะถูกคอมไพล์เมื่อ *ไม่ได้* เปิดฟีเจอร์ `bundle-pmat`
-    // มันจะคืนค่าเป็น Error เสมอ เพื่อป้องกันการเรียกใช้ Agent ที่ไม่มีอยู่จริง
     #[cfg(not(feature = "bundle-pmat"))]
     async fn execute_internal_pmat_agent(&self, _prompt: &str) -> Result<String> {
         bail!("Internal PMAT agent called, but the 'bundle-pmat' feature is not enabled. Please compile with --features bundle-pmat or use the CLI version of pmat.")
     }
 
-
-    /// Execute CLI-based agent using ACP over stdio
     async fn execute_cli_agent(
         &self,
         agent: &AgentConfig,
@@ -212,27 +193,22 @@ impl AgentExecutor {
         let stdin = child.stdin.take().context("Failed to get stdin")?;
         let stdout = child.stdout.take().context("Failed to get stdout")?;
 
-        // Send ACP request (JSON-RPC 2.0)
-        // *** แก้ไขเล็กน้อย: ส่ง prompt ไปใน arguments โดยตรงตามที่ pmat คาดหวัง ***
         let acp_request = serde_json::json!({
             "jsonrpc": "2.0",
             "id": 1,
-            "method": "context", // สมมติว่า pmat รับ method `context`
+            "method": "context",
             "params": {
                 "prompt": prompt,
                 "context": context,
-                "format": "llm-optimized" // อาจจะใส่ค่า default ที่ดีไปเลย
+                "format": "llm-optimized"
             }
         });
 
-        // Write request to stdin
         let request_line = serde_json::to_string(&acp_request)? + "\n";
         self.write_to_agent(stdin, &request_line).await?;
 
-        // Read response from stdout
         let response = self.read_from_agent(stdout).await?;
 
-        // Wait for process to complete
         let status = child.wait().await?;
         if !status.success() {
             bail!("Agent process exited with error: {}", status);
@@ -241,14 +217,12 @@ impl AgentExecutor {
         Ok(response)
     }
 
-    /// Write JSON-RPC request to agent's stdin
     async fn write_to_agent(&self, mut stdin: ChildStdin, data: &str) -> Result<()> {
         stdin.write_all(data.as_bytes()).await?;
         stdin.flush().await?;
         Ok(())
     }
 
-    /// Read JSON-RPC response from agent's stdout
     async fn read_from_agent(&self, stdout: ChildStdout) -> Result<String> {
         let mut reader = BufReader::new(stdout);
         let mut line = String::new();
@@ -258,10 +232,7 @@ impl AgentExecutor {
         let response: Value = serde_json::from_str(&line)
             .context("Failed to parse agent response")?;
 
-        // Extract result from JSON-RPC response
         if let Some(result) = response.get("result") {
-            // ผลลัพธ์จาก pmat อาจจะเป็น JSON object ที่มี context อยู่ข้างใน หรือเป็น string ตรงๆ
-            // ทำให้มันเป็น string เสมอเพื่อความเข้ากันได้
             if result.is_string() {
                 Ok(result.as_str().unwrap().to_string())
             } else {
@@ -274,7 +245,6 @@ impl AgentExecutor {
         }
     }
 
-    /// Execute Gemini extension-based agent
     async fn execute_gemini_extension(
         &self,
         agent: &AgentConfig,
@@ -284,13 +254,9 @@ impl AgentExecutor {
             .context("Extension agent requires extension_name")?;
 
         tracing::info!("Calling Gemini extension: {}", extension_name);
-
-        // TODO: Implement Gemini extension calling mechanism
-        // This would involve calling the Gemini CLI with the extension
         bail!("Gemini extension support not yet implemented")
     }
 
-    /// Clone for background execution (Arc cloning)
     fn clone_for_background(&self) -> Self {
         Self {
             agent_registry: self.agent_registry.clone(),
