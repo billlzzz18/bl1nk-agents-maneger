@@ -2,7 +2,7 @@
 name = "gemini-mcp-proxy"
 version = "0.1.0"
 edition = "2021"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["billlzzz1808 <billlzzz1808@gmail.com>"]
 description = "Dual-mode MCP/ACP orchestrator for multi-agent systems"
 license = "MIT"
 
