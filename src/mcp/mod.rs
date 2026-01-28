@@ -61,6 +61,9 @@ pub struct AgentStatusOutput {
 
 impl Orchestrator {
     pub async fn new(config: Config) -> Result<Self> {
+        // โค้ดส่วนนี้ยังคงทำงานได้ถูกต้อง
+        // `config.agents` จะมี pmat-internal agent รวมอยู่ด้วย
+        // ถ้าเราแก้ไข `config.rs` ให้เพิ่มมันเข้าไปเมื่อเปิดฟีเจอร์ `bundle-pmat`
         let agent_registry = Arc::new(RwLock::new(
             AgentRegistry::new(config.agents.clone())
         ));
@@ -134,7 +137,7 @@ async fn query_agent_status(
     args: AgentStatusArgs,
 ) -> pmcp::Result<AgentStatusOutput> {
     let registry = registry.read().await;
-    
+
     Ok(AgentStatusOutput {
         active_tasks: registry.active_task_count(),
         available_agents: registry.list_agent_ids(),
