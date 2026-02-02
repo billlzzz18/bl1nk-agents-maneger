@@ -104,7 +104,8 @@ impl Orchestrator {
                     move |args: DelegateTaskArgs, _extra: RequestHandlerExtra| {
                         let executor = executor.clone();
                         Box::pin(async move {
-                            executor.delegate_task(args).await
+                            let output = executor.delegate_task(args).await?;
+                            Ok(serde_json::to_value(output)?)
                         })
                     }
                 })
@@ -118,7 +119,8 @@ impl Orchestrator {
                     move |args: AgentStatusArgs, _extra: RequestHandlerExtra| {
                         let agent_registry = agent_registry.clone();
                         Box::pin(async move {
-                            query_agent_status(agent_registry, args).await
+                            let output = query_agent_status(agent_registry, args).await?;
+                            Ok(serde_json::to_value(output)?)
                         })
                     }
                 })

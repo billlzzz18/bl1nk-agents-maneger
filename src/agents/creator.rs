@@ -172,8 +172,8 @@ impl AgentCreator {
 
     /// Generate agent identifier from purpose
     fn generate_identifier(&self, purpose: &str) -> Result<String> {
-        let words: Vec<&str> = purpose
-            .to_lowercase()
+        let purpose_lower = purpose.to_lowercase();
+        let words: Vec<&str> = purpose_lower
             .split_whitespace()
             .filter(|w| w.len() > 2) // Skip short words
             .take(4)

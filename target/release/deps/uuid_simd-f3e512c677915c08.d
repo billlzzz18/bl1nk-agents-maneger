@@ -1,0 +1,12 @@
+/home/bill/dev/tools/extension/agents-manager/target/release/deps/uuid_simd-f3e512c677915c08.d: /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/lib.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/error.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/spec.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/format.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/parse.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/multiversion.rs
+
+/home/bill/dev/tools/extension/agents-manager/target/release/deps/libuuid_simd-f3e512c677915c08.rlib: /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/lib.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/error.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/spec.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/format.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/parse.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/multiversion.rs
+
+/home/bill/dev/tools/extension/agents-manager/target/release/deps/libuuid_simd-f3e512c677915c08.rmeta: /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/lib.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/error.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/spec.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/format.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/parse.rs /home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/multiversion.rs
+
+/home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/lib.rs:
+/home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/error.rs:
+/home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/spec.rs:
+/home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/format.rs:
+/home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/parse.rs:
+/home/bill/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/uuid-simd-0.8.0/src/multiversion.rs:

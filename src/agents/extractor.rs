@@ -1,5 +1,5 @@
-use crate::config::{AgentConfig, RoutingConfig};
-use crate::agents::{AgentRegistry, AgentRouter, registry::{TaskInfo, TaskStatus}};
+use crate::config::{AgentConfig, RoutingConfig, RoutingTier};
+use crate::agents::{AgentRegistry, AgentRouter, register::{TaskInfo, TaskStatus}};
 use crate::mcp::{DelegateTaskArgs, DelegateTaskOutput};
 use crate::rate_limit::RateLimitTracker;
 use anyhow::{Result, Context, bail};
@@ -44,9 +44,10 @@ impl AgentExecutor {
         // Select agent
         let registry = self.agent_registry.read().await;
 
-        let agent = if let Some(agent_id) = &args.agent_id {
+        let agent_config = if let Some(agent_id) = &args.agent_id {
             registry.get_agent(agent_id)
                 .ok_or_else(|| pmcp::Error::validation(format!("Agent not found: {}", agent_id)))?
+                .clone()
         } else {
             // Auto-select based on task_type
             let all_agents = registry.get_agents_by_priority();
@@ -54,10 +55,10 @@ impl AgentExecutor {
 
             self.router.select_agent(&args.task_type, &args.prompt, &agent_refs)
                 .map_err(|e| pmcp::Error::internal(e.to_string()))?
+                .clone()
         };
 
-        let agent_id = agent.id.clone();
-        let agent_config = agent.clone();
+        let agent_id = agent_config.id.clone();
 
         // Register task
         drop(registry);
@@ -75,8 +76,7 @@ impl AgentExecutor {
         let mut rate_limiter = self.rate_limiter.write().await;
         // เราส่ง agent_config.rate_limit เข้าไปด้วย
         if !rate_limiter.check_and_increment(&agent_id, &agent_config.rate_limit).await {
-            return Err(pmcp::Error::custom(
-                -32000, // RATE_LIMIT_EXCEEDED
+            return Err(pmcp::Error::internal(
                 format!("Rate limit exceeded for agent: {}", agent_id)
             ));
         }
@@ -86,12 +86,17 @@ impl AgentExecutor {
         if args.background {
             // Spawn background task
             let executor = self.clone_for_background();
+            let task_id_clone = task_id.clone();
+            let agent_config_clone = agent_config.clone();
+            let prompt_clone = args.prompt.clone();
+            let context_clone = args.context.clone();
+
             tokio::spawn(async move {
                 if let Err(e) = executor.execute_agent_task(
-                    task_id,
-                    agent_config,
-                    args.prompt,
-                    args.context,
+                    task_id_clone,
+                    agent_config_clone,
+                    prompt_clone,
+                    context_clone,
                 ).await {
                     tracing::error!("Background task failed: {}", e);
                 }
@@ -261,7 +266,7 @@ impl AgentExecutor {
         Self {
             agent_registry: self.agent_registry.clone(),
             rate_limiter: self.rate_limiter.clone(),
-            router: AgentRouter::new(RoutingConfig { rules: vec![] }),
+            router: AgentRouter::new(RoutingConfig { rules: vec![], tier: RoutingTier::Default }),
         }
     }
 }

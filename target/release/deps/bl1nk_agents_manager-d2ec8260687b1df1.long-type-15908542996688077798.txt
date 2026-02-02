@@ -1,0 +1,1 @@
+Pin<Box<(dyn Future<Output = std::result::Result<serde_json::Value, pmcp::Error>> + std::marker::Send + 'static)>>
