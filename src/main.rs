@@ -44,6 +44,7 @@ async fn main() -> Result<()> {
             EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| EnvFilter::new(&args.log_level))
         )
+        .with_writer(std::io::stderr) // Force logs to stderr
         .with_target(true)
         .with_thread_ids(true)
         .with_file(true)
