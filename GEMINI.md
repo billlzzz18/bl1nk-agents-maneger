@@ -1,56 +1,105 @@
-# Gemini MCP Proxy Project Context
+# 🤖 System Agents Manager Extension
 
-Gemini MCP Proxy is an open-source, dual-mode orchestrator that brings an intelligent, multi-agent architecture to any terminal environment. It is designed to be a high-performance, extensible, and robust backend for AI agents like Gemini CLI.
+**Version:** 0.2.0
+**Author:** billlzzz18 <team@bl1nk.site>
+**Extension ID:** `bl1nk-agents`
 
-## Project Overview
+This extension provides a powerful framework for managing and using specialized **System Agents** within the Gemini CLI. It allows users to switch between different personas (e.g., Software Architect, Creative Writer, Pirate) by swapping the underlying system prompt.
 
--   **Purpose:** Provide a high-performance Rust backend that acts as both an MCP Server for a main agent (like Gemini CLI) and an ACP Client to manage a community of sub-agents. It features an intelligent, policy-based routing engine and optional built-in capabilities via PMAT.
--   **Main Technologies:**
-    -   **Language:** Rust (Stable, 1.82+)
-    -   **Async Runtime:** Tokio
-    -   **Core Libraries:** `pmcp` (MCP SDK), `clap` (CLI), `serde` (Serialization), `tracing` (Logging)
-    -   **Testing:** `tokio-test`, `pretty_assertions`, `mockall`
-    -   **Linting/Formatting:** `clippy`, `rustfmt`
--   **Architecture:** Monorepo structure using Cargo Workspaces.
-    -   `crates/core`: The main Rust backend, containing all logic for the orchestrator, routing engine, and agent execution.
-    -   `schemas/`: JSON Schema definitions for all configuration files (`settings.schema.json`, `policy.schema.json`, etc.).
-    -   `agents/`: Directory for user-defined external agent configurations (`.agent.toml`).
-    -   `skills/`: Directory for user-defined skills (`.skill.md`).
+---
 
-## Building and Running
+## 🌟 What are System Agents?
 
--   **Install Dependencies:** `rustup update` and run `make setup` to install helper tools.
--   **Build All (Bundled PMAT):** `make build-bundle` (Recommended for full functionality)
--   **Build Standard:** `make build` (Lightweight, requires external agents)
--   **Run in Development:** `make dev` (Uses `cargo-watch` for hot-reloading)
--   **Run Production:** `make run` (Runs the release binary)
--   **Clean Artifacts:** `make clean`
+System Agents are specialized `system.md` files that define how the Gemini CLI behaves. Instead of a generic assistant, you can load a specific persona with expert knowledge, unique speech patterns, or strict behavioral constraints.
 
-## Testing and Quality
+This extension provides:
+1.  **A Curated Library**: High-quality, pre-tested agents for engineering, writing, and entertainment.
+2.  **Management Commands**: CLI tools to list, inspect, and switch between agents.
+3.  **Extensibility**: A structure to add your own custom agents.
 
--   **Test Commands:**
-    -   **Run All Tests:** `make test` (Runs with `--all-features`)
-    -   **Run Linter:** `make clippy` (Enforces strict warnings)
-    -   **Check Formatting:** `make fmt`
--   **Full Validation:** Run `make check`, `make fmt`, `make clippy`, and `make test` before submitting a PR.
+---
 
-## Development Conventions
+## 🎭 Available Agents
 
--   **Contributions:** Follow the process outlined in `CONTRIBUTING.md`.
--   **Pull Requests:** Keep PRs small, focused, and linked to an existing issue.
--   **Commit Messages:** Follow the [Conventional Commits](https://www.conventionalcommits.org/) standard.
--   **Coding Style:** Adhere to Rust best practices and the patterns established in the `crates/core` package. Use `rustfmt` and `clippy` to enforce style.
--   **Error Handling:** Use the `anyhow` crate for application-level errors and `thiserror` for library-level, specific error types.
+The extension comes with a built-in library of agents located in the `agents/` directory:
 
-## Testing Conventions
+### 🛠️ Engineering & Development
+*   **Software Architect** (`architect`): Focuses on design, patterns, and documentation. Does *not* write implementation code.
+*   **Code Generator** (`code-generator`): Streamlined, efficient coder. Minimal chatter, maximum code.
 
--   **Environment Variables:** When testing code that depends on environment variables, use `std::env::set_var` within tests marked with `#[serial]` (from the `serial_test` crate) to prevent race conditions. Always clean up variables in the test's drop scope or using a custom guard.
--   **Filesystem Operations:** Use the `tempfile` crate to create temporary directories and files for tests that require filesystem interaction. This ensures tests are isolated and do not leave artifacts.
+### ✍️ Creative
+*   **Creative Writer** (`creative-writer`): Expert in poetry, prose, storytelling, and literary adaptation.
 
-## Documentation
+### 🎪 Entertainment & Comedy
+*   **Dad Joke Comedian** (`comedian`): Responds to everything with a dad joke.
+*   **Pirate** (`pirate`): Technical help delivered in authentic pirate dialect.
+*   **Shakespeare** (`shakespeare`): Codes and speaks in iambic pentameter/Elizabethan English.
+*   **Yoda** (`yoda`): Helpful he is. Code he will fix.
+*   **Cowboy** (`cowboy`): Folksy wisdom and straight-shooting technical advice.
+*   **Gen Z** (`gen-z`): Technical support, no cap.
 
--   **CRITICAL:** Always use the `docs-writer` skill when you are asked to write, edit, or review any documentation for this project.
--   The main user-facing documentation is the `README.md` in the root of the workspace.
--   Architectural decisions and deep-dives should be documented in the `docs/` directory.
--   Suggest documentation updates when your code changes render existing documentation obsolete or incomplete.
+---
 
+## 🚀 Commands
+
+This extension registers the `/system-agent` command namespace.
+
+| Command | Description | Usage |
+| :--- | :--- | :--- |
+| **`/system-agent`** | List all available agents (built-in and custom). | `/system-agent` |
+| **`/system-agent:info`** | Get detailed metadata and description for a specific agent. | `/system-agent:info <agent_id>` |
+| **`/system-agent:switch`** | Get instructions and commands to switch your active agent. | `/system-agent:switch <agent_id>` |
+| **`/system-agent:examples`** | Show example prompts and use cases for an agent. | `/system-agent:examples <agent_id>` |
+| **`/system-agent:new`** | Interactive wizard to create a new custom agent. | `/system-agent:new` |
+
+---
+
+## 💡 How to Switch Agents
+
+**Important:** You cannot switch agents in the *middle* of a running session because the system prompt is loaded at startup. To switch agents, you must set the `GEMINI_SYSTEM_MD` environment variable and start a new session.
+
+The `/system-agent:switch` command will generate the exact commands you need.
+
+**Common Methods:**
+
+1.  **Temporary (One-off session):**
+    ```bash
+    GEMINI_SYSTEM_MD=~/.gemini/extensions/agents-manager/agents/pirate.md gemini
+    ```
+
+2.  **Persistent (Until shell exit):**
+    ```bash
+    export GEMINI_SYSTEM_MD=~/.gemini/extensions/agents-manager/agents/architect.md
+    gemini
+    ```
+
+3.  **Aliases (Recommended):**
+    Add these to your `.bashrc` or `.zshrc`:
+    ```bash
+    alias gemini-pirate="GEMINI_SYSTEM_MD=~/.gemini/extensions/agents-manager/agents/pirate.md gemini"
+    alias gemini-code="GEMINI_SYSTEM_MD=~/.gemini/extensions/agents-manager/agents/code-generator.md gemini"
+    ```
+
+---
+
+## 📂 Project Structure
+
+For developers extending this project:
+
+```text
+/
+├── gemini-extension.json   # Extension manifest
+├── agents/                 # Built-in agent definitions
+│   ├── agents.json         # Registry of built-in agents
+│   ├── *.md                # The actual system prompt files
+│   └── README.md           # Documentation for agents
+└── commands/               # Command definitions (.toml)
+    ├── system-agent.toml   # Main /system-agent command
+    └── agent/              # Subcommands (:switch, :info, etc.)
+```
+
+### Adding a New Agent
+
+1.  Create a new `.md` file in `agents/`.
+2.  Add the agent's metadata to `agents/agents.json`.
+3.  (Optional) If it's a "custom" user agent (not built-in), the logic in `system-agent.toml` looks for a `custom/agents.json` file relative to the extension path.
