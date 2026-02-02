@@ -1,50 +1,39 @@
-use serde::Deserialize;
-use anyhow::{Result, Context};
-use std::path::{Path, PathBuf};
-use std::fs;
+use anyhow::{Context, Result};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs;
+use std::path::{Path, PathBuf};
 
-// =============================================================================
-// ส่วนที่ 1: โครงสร้างสำหรับ Policy (`policy.toml`)
-// =============================================================================
-
-#[derive(Debug, Clone, Deserialize, Default)]
-pub struct Policy {
-    #[serde(default)]
-    pub routing: RoutingPolicy,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Config {
+    pub server: ServerConfig,
+    pub main_agent: MainAgentConfig,
+    pub agents: Vec<AgentConfig>,
+    pub routing: RoutingConfig,
+    pub rate_limiting: RateLimitingConfig,
+    pub logging: LoggingConfig,
 }
 
-#[derive(Debug, Clone, Deserialize, Default)]
-pub struct RoutingPolicy {
-    #[serde(default)]
-    pub tier: String,
-    #[serde(default)]
-    pub rules: Vec<RoutingRule>,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ServerConfig {
+    pub host: String,
+    pub port: u16,
+    #[serde(default = "default_max_concurrent")]
+    pub max_concurrent_tasks: usize,
 }
 
-#[derive(Debug, Clone, Deserialize, Default)]
-pub struct RoutingRule {
-    pub task_type: String,
-    #[serde(default)]
-    pub keywords: Vec<String>,
-    pub preferred_agents: Vec<String>,
-    #[serde(default)]
-    pub priority: u16,
+fn default_max_concurrent() -> usize { 5 }
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct MainAgentConfig {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub agent_type: String,
+    pub session_token_path: Option<String>,
 }
 
-// =============================================================================
-// ส่วนที่ 2: โครงสร้างสำหรับ Agent Registry (`registry.json`)
-// =============================================================================
-
-#[derive(Debug, Clone, Deserialize, Default)]
-pub struct AgentRegistryConfig {
-    #[serde(default)]
-    pub agents: Vec<AgentTechnicalConfig>,
-}
-
-#[derive(Debug, Clone, Deserialize, PartialEq, Eq, Hash)]
-#[serde(default)]
-pub struct AgentTechnicalConfig {
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct AgentConfig {
     pub id: String,
     pub name: String,
     #[serde(rename = "type")]
@@ -52,134 +41,292 @@ pub struct AgentTechnicalConfig {
     pub command: Option<String>,
     pub args: Option<Vec<String>>,
     pub extension_name: Option<String>,
-    pub capabilities: Vec<String>, // Capabilities ยังคงอยู่ที่นี่ เพราะมันเป็นส่วนหนึ่งของ "สิ่งที่ Agent ทำได้ทางเทคนิค"
-    pub priority: u8, // Priority ยังอยู่ที่นี่ เพื่อใช้เป็น Fallback เมื่อไม่มี Rule ใน Policy
+    #[serde(default)]
     pub rate_limit: RateLimit,
+    pub capabilities: Vec<String>,
+    #[serde(default)]
+    pub priority: u8,
+    #[serde(default)]
+    pub enabled: bool,
 }
 
-impl Default for AgentTechnicalConfig {
-    fn default() -> Self {
-        Self {
-            id: String::new(),
-            name: String::new(),
-            agent_type: "cli".to_string(),
-            command: None,
-            args: None,
-            extension_name: None,
-            capabilities: Vec::new(),
-            priority: 0,
-            rate_limit: RateLimit::default(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(default)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RateLimit {
+    #[serde(default = "default_rpm")]
     pub requests_per_minute: u32,
+    #[serde(default = "default_rpd")]
     pub requests_per_day: u32,
 }
 
+fn default_rpm() -> u32 { 60 }
+fn default_rpd() -> u32 { 2000 }
+
 impl Default for RateLimit {
     fn default() -> Self {
-        Self { requests_per_minute: 60, requests_per_day: 2000 }
+        Self {
+            requests_per_minute: 60,
+            requests_per_day: 2000,
+        }
     }
 }
 
-
-// =============================================================================
-// ส่วนที่ 3: โครงสร้าง Config สุดท้ายที่โปรแกรมจะใช้งาน
-// =============================================================================
-
-#[derive(Debug, Clone, Default)]
-pub struct Config {
-    pub server: ServerConfig, // การตั้งค่า Server ยังคงอยู่ที่นี่
-    pub logging: LoggingConfig,
-    pub policy: Policy,
-    pub agents: Vec<AgentTechnicalConfig>,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RoutingConfig {
+    #[serde(default)]
+    pub tier: RoutingTier,
+    pub rules: Vec<RoutingRule>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-#[serde(default)]
-pub struct ServerConfig {
-    pub host: String,
-    pub port: u16,
+/// Routing tier determines rule priority
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "lowercase")]
+pub enum RoutingTier {
+    Default,
+    User,
+    Admin,
 }
-impl Default for ServerConfig { /* ... */ }
 
-#[derive(Debug, Clone, Deserialize)]
-#[serde(default)]
+impl Default for RoutingTier {
+    fn default() -> Self {
+        RoutingTier::Default
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RoutingRule {
+    pub task_type: String,
+    pub keywords: Vec<String>,
+    pub preferred_agents: Vec<String>,
+    #[serde(default)]
+    pub priority: u16,  // 0-999
+    #[serde(default)]
+    pub enabled: bool,
+}
+
+impl Default for RoutingRule {
+    fn default() -> Self {
+        Self {
+            task_type: String::new(),
+            keywords: Vec::new(),
+            preferred_agents: Vec::new(),
+            priority: 0,
+            enabled: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RateLimitingConfig {
+    #[serde(default = "default_strategy")]
+    pub strategy: String,
+    #[serde(default = "default_true")]
+    pub track_usage: bool,
+    pub usage_db_path: String,
+}
+
+fn default_strategy() -> String { "round-robin".to_string() }
+fn default_true() -> bool { true }
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LoggingConfig {
+    #[serde(default = "default_log_level")]
     pub level: String,
+    #[serde(default = "default_output")]
+    pub output: String,
 }
-impl Default for LoggingConfig { /* ... */ }
 
-
-// =============================================================================
-// ตรรกะการโหลดที่เคารพใน Separation of Concerns
-// =============================================================================
+fn default_log_level() -> String { "info".to_string() }
+fn default_output() -> String { "stdout".to_string() }
 
 impl Config {
-    pub fn load() -> Result<Self> {
-        // 1. โหลด Policy
-        let mut policy = Policy::default();
-        if let Ok(policy_path) = get_policy_path() {
-            if policy_path.exists() {
-                tracing::info!("Loading policy from: {}", policy_path.display());
-                policy = load_toml_file::<Policy>(&policy_path).unwrap_or_default();
-            }
-        }
-        // (ในอนาคตสามารถเพิ่มการ merge project-level policy ที่นี่ได้)
-
-        // 2. โหลด Agent Registry
-        let mut agents = AgentRegistryConfig::default();
-        if let Ok(registry_path) = get_registry_path() {
-            if registry_path.exists() {
-                tracing::info!("Loading agent registry from: {}", registry_path.display());
-                agents = load_toml_file::<AgentRegistryConfig>(&registry_path).unwrap_or_default();
-            }
-        }
-
-        // 3. ฉีด Bundled Agent (ถ้ามี)
-        let mut all_agents = agents.agents;
+    /// Load config from file path
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let content = fs::read_to_string(path.as_ref())
+            .with_context(|| format!("Failed to read config file: {:?}", path.as_ref()))?;
+        
+        let mut config: Config = toml::from_str(&content)
+            .context("Failed to parse TOML config")?;
+        
+        // Inject bundled PMAT agent if feature is enabled
         #[cfg(feature = "bundle-pmat")]
         {
-            tracing::info!("'bundle-pmat' feature is enabled. Injecting internal PMAT agent.");
-            let pmat_agent = AgentTechnicalConfig {
-                id: "pmat-architect-internal".to_string(),
-                name: "PMAT Code Architect (Bundled)".to_string(),
-                agent_type: "internal".to_string(),
-                command: Some("pmat-internal".to_string()),
-                priority: 255,
-                capabilities: vec!["code-analysis".to_string(), "context-generation".to_string()],
-                ..Default::default()
-            };
-            all_agents.push(pmat_agent);
+            config.inject_bundled_pmat();
         }
+        
+        config.validate()?;
+        Ok(config)
+    }
 
-        // 4. ประกอบร่างเป็น Config สุดท้าย
-        let final_config = Config {
-            server: ServerConfig::default(), // สามารถ override จากไฟล์อื่นได้ในอนาคต
-            logging: LoggingConfig::default(),
-            policy,
-            agents: all_agents,
+    /// Load config from default locations
+    pub fn load_default() -> Result<Self> {
+        let config_paths = Self::default_config_paths();
+        
+        for path in config_paths {
+            if path.exists() {
+                tracing::info!("Loading config from: {:?}", path);
+                return Self::load(&path);
+            }
+        }
+        
+        anyhow::bail!(
+            "No config file found. Create ~/.config/bl1nk-agents-manager/config.toml or use --config"
+        );
+    }
+
+    /// Default config file locations (in order of priority)
+    fn default_config_paths() -> Vec<PathBuf> {
+        let mut paths = Vec::new();
+        
+        // Current directory
+        paths.push(PathBuf::from("./config.toml"));
+        paths.push(PathBuf::from("./.bl1nk-agents-manager.toml"));
+        
+        // User config directory
+        if let Ok(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")) {
+            let home_path = PathBuf::from(home);
+            paths.push(home_path.join(".config/bl1nk-agents-manager/config.toml"));
+            paths.push(home_path.join(".bl1nk-agents-manager.toml"));
+        }
+        
+        paths
+    }
+
+    /// Inject bundled PMAT agent
+    #[cfg(feature = "bundle-pmat")]
+    fn inject_bundled_pmat(&mut self) {
+        let pmat_agent = AgentConfig {
+            id: "pmat-architect-internal".to_string(),
+            name: "PMAT Architect (Bundled)".to_string(),
+            agent_type: "internal".to_string(),
+            command: None,
+            args: None,
+            extension_name: None,
+            rate_limit: RateLimit {
+                requests_per_minute: 120,  // Higher limit for internal
+                requests_per_day: 5000,
+            },
+            capabilities: vec![
+                "code-analysis".to_string(),
+                "context-generation".to_string(),
+                "technical-debt".to_string(),
+            ],
+            priority: 200,
+            enabled: true,
         };
 
-        Ok(final_config)
+        // Check if already exists
+        if !self.agents.iter().any(|a| a.id == "pmat-architect-internal") {
+            tracing::info!("✨ Injecting bundled PMAT agent");
+            self.agents.push(pmat_agent);
+        }
+    }
+
+    /// Validate configuration
+    fn validate(&self) -> Result<()> {
+        // Validate server config
+        if self.server.max_concurrent_tasks == 0 {
+            anyhow::bail!("max_concurrent_tasks must be greater than 0");
+        }
+
+        // Validate agents
+        if self.agents.is_empty() {
+            anyhow::bail!("At least one agent must be configured");
+        }
+
+        // Check for duplicate agent IDs
+        let mut seen_ids = std::collections::HashSet::new();
+        for agent in &self.agents {
+            if !seen_ids.insert(&agent.id) {
+                anyhow::bail!("Duplicate agent ID: {}", agent.id);
+            }
+        }
+
+        // Validate routing rules reference valid agents
+        let agent_ids: Vec<String> = self.agents.iter().map(|a| a.id.clone()).collect();
+        for rule in &self.routing.rules {
+            for preferred_agent in &rule.preferred_agents {
+                if !agent_ids.contains(preferred_agent) {
+                    tracing::warn!(
+                        "⚠️  Routing rule references unknown agent: {} (will be skipped)",
+                        preferred_agent
+                    );
+                }
+            }
+        }
+
+        // Validate priority ranges
+        for rule in &self.routing.rules {
+            if rule.priority > 999 {
+                anyhow::bail!(
+                    "Rule priority must be 0-999, got {} for task_type '{}'",
+                    rule.priority,
+                    rule.task_type
+                );
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Get agent by ID
+    pub fn get_agent(&self, id: &str) -> Option<&AgentConfig> {
+        self.agents.iter().find(|a| a.id == id && a.enabled)
+    }
+
+    /// Get agents by capability
+    pub fn get_agents_by_capability(&self, capability: &str) -> Vec<&AgentConfig> {
+        self.agents
+            .iter()
+            .filter(|a| a.enabled && a.capabilities.contains(&capability.to_string()))
+            .collect()
+    }
+
+    /// Get enabled agents only
+    pub fn get_enabled_agents(&self) -> Vec<&AgentConfig> {
+        self.agents.iter().filter(|a| a.enabled).collect()
     }
 }
 
-// --- ฟังก์ชัน Helper ---
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-fn load_toml_file<T: for<'de> Deserialize<'de> + Default>(path: &Path) -> Result<T> {
-    let content = fs::read_to_string(path)?;
-    toml::from_str(&content).with_context(|| format!("Failed to parse TOML from {}", path.display()))
-}
+    #[test]
+    fn test_default_values() {
+        let config_str = r#"
+            [server]
+            host = "127.0.0.1"
+            port = 3000
 
-fn get_policy_path() -> Result<PathBuf> {
-    Ok(dirs::config_dir().context("Cannot find config dir")?.join("gemini-mcp-proxy").join("policy.toml"))
-}
+            [main_agent]
+            name = "gemini"
+            type = "gemini-cli"
 
-fn get_registry_path() -> Result<PathBuf> {
-    Ok(dirs::config_dir().context("Cannot find config dir")?.join("gemini-mcp-proxy").join("registry.toml"))
+            [[agents]]
+            id = "test-agent"
+            name = "Test"
+            type = "cli"
+            command = "test"
+            capabilities = ["test"]
+
+            [routing]
+            rules = []
+
+            [rate_limiting]
+            usage_db_path = "/tmp/test.db"
+
+            [logging]
+        "#;
+
+        let config: Config = toml::from_str(config_str).unwrap();
+        assert_eq!(config.server.max_concurrent_tasks, 5);
+        assert_eq!(config.routing.tier, RoutingTier::Default);
+        assert_eq!(config.logging.level, "info");
+    }
+
+    #[test]
+    fn test_tier_ordering() {
+        assert!(RoutingTier::Admin > RoutingTier::User);
+        assert!(RoutingTier::User > RoutingTier::Default);
+    }
 }
