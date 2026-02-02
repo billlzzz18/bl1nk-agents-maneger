@@ -8,64 +8,74 @@ use clap::Parser;
 use std::path::PathBuf;
 use tracing_subscriber::EnvFilter;
 
-/// Gemini MCP/ACP Orchestrator: A dual-mode proxy for multi-agent systems.
+/// BL1NK Agents Manager - Intelligent MCP/ACP Orchestrator
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Path to the configuration file.
-    #[arg(short, long)]
+    /// Path to configuration file
+    #[arg(short, long, value_name = "FILE")]
     config: Option<PathBuf>,
 
-    /// (ใหม่) Run as an HTTP server for A2A protocol instead of stdio.
-    #[arg(long)]
-    http: bool,
+    /// Server host address
+    #[arg(long, default_value = "127.0.0.1")]
+    host: String,
+
+    /// Server port
+    #[arg(short, long, default_value_t = 3000)]
+    port: u16,
+
+    /// Log level (trace, debug, info, warn, error)
+    #[arg(short, long, default_value = "info")]
+    log_level: String,
+
+    /// Run in daemon mode (background)
+    #[arg(short, long)]
+    daemon: bool,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Parse CLI arguments
+    let args = Args::parse();
+
     // Initialize logging
     tracing_subscriber::fmt()
         .with_env_filter(
             EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new("info"))
+                .unwrap_or_else(|_| EnvFilter::new(&args.log_level))
         )
+        .with_target(true)
+        .with_thread_ids(true)
+        .with_file(true)
+        .with_line_number(true)
         .init();
 
-    tracing::info!("Starting Gemini MCP/ACP Orchestrator...");
+    tracing::info!("🚀 Starting BL1NK Agents Manager");
+    tracing::info!("Version: {}", env!("CARGO_PKG_VERSION"));
 
-    // Parse command-line arguments
-    let args = Args::parse();
+    // Load configuration
+    let config = if let Some(config_path) = args.config {
+        tracing::info!("Loading config from: {:?}", config_path);
+        config::Config::load(config_path)?
+    } else {
+        tracing::info!("Loading config from default locations");
+        config::Config::load_default()?
+    };
 
-    // Load configuration using the path from args, or None for default path
-    let config = config::Config::load(args.config)?;
+    tracing::info!("✅ Loaded {} agents", config.agents.len());
+    tracing::info!("✅ Loaded {} routing rules", config.routing.rules.len());
 
-    // Log a confirmation message
-    #[cfg(feature = "bundle-pmat")]
-    tracing::info!(
-        "Loaded configuration with {} agents (including bundled PMAT).",
-        config.agents.len()
-    );
-    #[cfg(not(feature = "bundle-pmat"))]
-    tracing::info!(
-        "Loaded configuration with {} agents. (To include bundled PMAT, compile with --features bundle-pmat)",
-        config.agents.len()
-    );
+    // Log routing tier
+    tracing::info!("📊 Routing tier: {:?}", config.routing.tier);
 
     // Initialize the orchestrator
     let orchestrator = mcp::Orchestrator::new(config).await?;
 
-    // --- ส่วนที่แก้ไข: เลือกว่าจะรันโหมดไหนตาม Flag ---
-    if args.http {
-        // รันในโหมด HTTP Server (สำหรับ A2A)
-        tracing::info!("Starting in HTTP Server mode for A2A protocol...");
-        orchestrator.run_http().await?;
-    } else {
-        // รันในโหมด Stdio (แบบเดิม, สำหรับ MCP)
-        tracing::info!("Starting in Stdio mode for MCP protocol...");
-        orchestrator.run_stdio().await?;
-    }
-
-    tracing::info!("Orchestrator shut down gracefully.");
+    // Run the MCP server
+    tracing::info!("🎧 Starting MCP server on stdio");
+    tracing::info!("Host: {} | Port: {}", args.host, args.port);
+    
+    orchestrator.run_stdio().await?;
 
     Ok(())
 }
