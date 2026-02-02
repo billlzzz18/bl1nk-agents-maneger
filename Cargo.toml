@@ -10,8 +10,6 @@ repository = "https://github.com/billlzzz18/bl1nk-agents-manager"
 [features]
 default = ["schema-generation"]
 schema-generation = ["pmcp/schema-generation"]
-bundle-pmat = ["dep:pmat-core"]  # เพิ่ม PMAT bundling
-bundle-pmat-full = ["bundle-pmat", "pmat-core/full-lang-support"]
 proptest = ["dep:proptest"]
 
 [dependencies]
@@ -19,16 +17,13 @@ proptest = ["dep:proptest"]
 pmcp = { version = "1.8", features = ["schema-generation"] }
 # agent-client-protocol = "0.6"  # ถ้าจะใช้ ACP แยก
 
-# PMAT bundling (optional)
-pmat-core = { version = "0.3", optional = true }
-
 # Core async runtime
 tokio = { version = "1.0", features = ["full"] }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-schemars = "0.8"
+schemars = "1.0"
 
 # Error handling
 anyhow = "1.0.99"
