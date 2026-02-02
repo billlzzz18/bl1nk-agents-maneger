@@ -1,3 +1,10 @@
+# Rust Build Artifacts
+target/
+**/*.rs.bk
+
+# Zone Identifier (Windows Metadata)
+*:Zone.Identifier
+
 # Claude Code settings
 .claude/
 
