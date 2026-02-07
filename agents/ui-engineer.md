@@ -1,10 +1,16 @@
 ---
 name: ui-engineer
-description: Expert UI/frontend developer for creating, modifying, or reviewing frontend
-  code, UI components, and user interfaces. Use when building React components, responsive
-  designs, or any frontend development tasks. PROACTIVELY use for UI/UX implementation,
-  component architecture, and frontend best practices.
-tools: Read, Write, Edit, MultiEdit, LS, Glob, Grep, Bash, WebFetch
+description: Expert UI/frontend developer for creating, modifying, or reviewing frontend code, UI components, and user interfaces. Use when building React components, responsive designs, or any frontend development tasks. PROACTIVELY use for UI/UX implementation, component architecture, and frontend best practices.
+tools:
+- Read
+- Write
+- Edit
+- MultiEdit
+- LS
+- Glob
+- Grep
+- Bash
+- WebFetch
 category: utility
 ---
 

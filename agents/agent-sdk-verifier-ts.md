@@ -1,8 +1,6 @@
 ---
 name: agent-sdk-verifier-ts
-description: Use this agent to verify that a TypeScript Agent SDK application is properly
-  configured, follows SDK best practices and documentation recommendations, and is
-  ready for deployment or testing.
+description: Use this agent to verify that a TypeScript Agent SDK application is properly configured, follows SDK best practices and documentation recommendations, and is ready for deployment or testing.
 category: engineering
 ---
 

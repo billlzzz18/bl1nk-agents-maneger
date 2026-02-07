@@ -1,9 +1,6 @@
 ---
 name: research-analyzer
-description: Use this agent when you need to deeply analyze research documents, thought
-  documents, or technical analysis files to extract high-value, actionable insights.
-  This agent specializes in filtering out noise and focusing on key decisions, constraints,
-  technical specifications, and actionable recommendations from complex research materials.
+description: Use this agent when you need to deeply analyze research documents, thought documents, or technical analysis files to extract high-value, actionable insights. This agent specializes in filtering out noise and focusing on key decisions, constraints, technical specifications, and actionable recommendations from complex research materials.
 color: Red
 category: utility
 ---

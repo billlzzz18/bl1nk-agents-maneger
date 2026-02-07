@@ -3,7 +3,7 @@
     {
       "id": "architect",
       "name": "Architect",
-      "file": "architect.md",
+      "file": "code-architect.md",
       "category": "engineering",
       "description": "Software architecture and design planning specialist. Focuses exclusively on research, analysis, and documentation. Does not write implementation code.",
       "use_cases": [

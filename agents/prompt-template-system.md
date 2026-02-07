@@ -1,5 +1,5 @@
 ---
-alwaysApply: false
+alwaysApply: true
 name: prompt-template-system
 description: Agent for prompt template system
 category: utility
