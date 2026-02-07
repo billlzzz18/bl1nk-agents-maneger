@@ -1,5 +1,5 @@
 use crate::agents::create_builtin_agents;
-use crate::config::OhMyOpenCodeConfig;
+use crate::config::Bl1nkConfig;
 use anyhow::{anyhow, Result};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -47,7 +47,7 @@ pub struct ModelCacheState {
 // Dependencies injection struct
 pub struct ConfigHandlerDeps {
     pub ctx: ConfigContext,
-    pub plugin_config: OhMyOpenCodeConfig, // Use the real struct
+    pub plugin_config: Bl1nkConfig, // Use the real struct
     pub model_cache_state: ModelCacheState,
 }
 

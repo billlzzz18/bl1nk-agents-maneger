@@ -494,7 +494,7 @@ pub type AnyMcpName = String;
 pub type McpName = String;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct OhMyOpenCodeConfig {
+pub struct Bl1nkConfig {
     #[serde(rename = "$schema")]
     pub schema: Option<String>,
     pub new_task_system_enabled: Option<bool>,

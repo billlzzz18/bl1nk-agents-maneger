@@ -28,7 +28,7 @@ brought to feature parity with existing TypeScript logic.
 For a complete non‑developer overview, see `docs/PROJECT_STATUS.md`.
 ## OVERVIEW
 
-CLI entry: `bunx oh-my-opencode`. Interactive installer, doctor diagnostics. Commander.js + @clack/prompts.
+CLI entry: `bunx bl1nk`. Interactive installer, doctor diagnostics. Commander.js + @clack/prompts.
 
 ## STRUCTURE
 

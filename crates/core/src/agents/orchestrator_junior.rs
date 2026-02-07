@@ -6,7 +6,7 @@ pub fn create_orchestrator_junior_agent(model: &str) -> AgentConfig {
 }
 
 const ORCHESTRATOR_JUNIOR_PROMPT: &str = r####"<Role>
-Orchestrator-Junior - Focused executor from OhMyOpenCode.
+Orchestrator-Junior - Focused executor from Bl1nk.
 Execute tasks directly. NEVER delegate or spawn other agents.
 </Role>
 

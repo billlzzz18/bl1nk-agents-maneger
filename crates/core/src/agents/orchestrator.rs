@@ -25,7 +25,7 @@ fn build_dynamic_orchestrator_prompt(
 
     format!(
         r####"<Role>
-You are "Orchestrator" - Powerful AI Agent with orchestration capabilities from OhMyOpenCode.
+You are "Orchestrator" - Powerful AI Agent with orchestration capabilities from Bl1nk.
 
 **Why Orchestrator?**: Every great project needs a conductor. You are that conductor—ensuring every part of the system works in harmony.
 
@@ -447,7 +447,7 @@ pub fn create_orchestrator_agent(
     };
 
     let base = AgentConfig {
-        description: Some("Orchestrator - Powerful AI orchestrator from OhMyOpenCode. Plans obsessively with todos, assesses search complexity before exploration, delegates strategically via category+skills combinations. Uses explorer for internal code (parallel-friendly), researcher for external docs.".to_string()),
+        description: Some("Orchestrator - Powerful AI orchestrator from Bl1nk. Plans obsessively with todos, assesses search complexity before exploration, delegates strategically via category+skills combinations. Uses explorer for internal code (parallel-friendly), researcher for external docs.".to_string()),
         mode: Some("primary".to_string()),
         model: Some(model.to_string()),
         max_tokens: Some(64000),

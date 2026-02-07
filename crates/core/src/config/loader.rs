@@ -1,4 +1,4 @@
-use crate::config::schema::OhMyOpenCodeConfig;
+use crate::config::schema::Bl1nkConfig;
 use crate::config::schema::{AgentOverrides, CategoriesConfig, ClaudeCodeConfig};
 use serde::de::DeserializeOwned;
 use std::collections::HashSet;
@@ -130,7 +130,7 @@ pub fn migrate_config_file(_config_path: &Path, _raw_config: &serde_json::Value)
 pub fn load_config_from_path(
     config_path: &Path,
     ctx: &mut ConfigLoadContext,
-) -> Option<OhMyOpenCodeConfig> {
+) -> Option<Bl1nkConfig> {
     if !config_path.exists() {
         return None;
     }
@@ -150,7 +150,7 @@ pub fn load_config_from_path(
 
             migrate_config_file(config_path, &raw_config);
 
-            match serde_json::from_value::<OhMyOpenCodeConfig>(raw_config) {
+            match serde_json::from_value::<Bl1nkConfig>(raw_config) {
                 Ok(config) => Some(config),
                 Err(err) => {
                     ctx.errors.push(ConfigLoadError {
@@ -239,10 +239,10 @@ fn merge_claude_code(
 }
 
 pub fn merge_configs(
-    base: OhMyOpenCodeConfig,
-    override_cfg: OhMyOpenCodeConfig,
-) -> OhMyOpenCodeConfig {
-    OhMyOpenCodeConfig {
+    base: Bl1nkConfig,
+    override_cfg: Bl1nkConfig,
+) -> Bl1nkConfig {
+    Bl1nkConfig {
         schema: override_cfg.schema.or(base.schema),
         new_task_system_enabled: override_cfg
             .new_task_system_enabled
@@ -277,9 +277,9 @@ pub fn merge_configs(
     }
 }
 
-pub fn load_plugin_config(directory: &Path) -> (OhMyOpenCodeConfig, ConfigLoadContext) {
+pub fn load_plugin_config(directory: &Path) -> (Bl1nkConfig, ConfigLoadContext) {
     let config_dir = get_opencode_config_dir();
-    let user_base_path = config_dir.join("oh-my-opencode");
+    let user_base_path = config_dir.join("bl1nk");
     let user_detected = detect_config_file(&user_base_path);
     let user_config_path = if user_detected.format != ConfigFormat::None {
         user_detected.path
@@ -287,7 +287,7 @@ pub fn load_plugin_config(directory: &Path) -> (OhMyOpenCodeConfig, ConfigLoadCo
         user_base_path.with_extension("json")
     };
 
-    let project_base_path = directory.join(".opencode").join("oh-my-opencode");
+    let project_base_path = directory.join(".opencode").join("bl1nk");
     let project_detected = detect_config_file(&project_base_path);
     let project_config_path = if project_detected.format != ConfigFormat::None {
         project_detected.path
@@ -298,7 +298,7 @@ pub fn load_plugin_config(directory: &Path) -> (OhMyOpenCodeConfig, ConfigLoadCo
     let mut ctx = ConfigLoadContext::default();
 
     let mut config = load_config_from_path(&user_config_path, &mut ctx)
-        .unwrap_or_else(|| OhMyOpenCodeConfig::default());
+        .unwrap_or_else(|| Bl1nkConfig::default());
 
     if let Some(project_config) = load_config_from_path(&project_config_path, &mut ctx) {
         config = merge_configs(config, project_config);

@@ -1,4 +1,4 @@
-use crate::config::{CategoryConfig, OhMyOpenCodeConfig};
+use crate::config::{CategoryConfig, Bl1nkConfig};
 use crate::config::handler::{ConfigContext, ConfigHandler, ConfigHandlerDeps, ModelCacheState};
 use anyhow::Result;
 use serde_json::Value;
@@ -46,7 +46,7 @@ pub fn reorder_agents_by_priority(
 /// This delegates to the existing Rust ConfigHandler implementation.
 pub async fn handle_config(
     ctx: ConfigContext,
-    plugin_config: OhMyOpenCodeConfig,
+    plugin_config: Bl1nkConfig,
     model_cache_state: ModelCacheState,
     config: &mut Value,
 ) -> Result<()> {
