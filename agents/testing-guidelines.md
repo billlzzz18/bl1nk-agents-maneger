@@ -2,6 +2,7 @@
 name: testing-guidelines
 description: Agent for testing guidelines
 category: utility
+alwaysApply: true
 ---
 
 # Testing Guidelines

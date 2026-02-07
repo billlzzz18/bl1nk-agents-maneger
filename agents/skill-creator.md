@@ -1,9 +1,6 @@
 ---
 name: skill-creator
-description: Use this agent when users want to create a new skill (or update an existing
-  skill) that extends Claude's capabilities with specialized knowledge, workflows,
-  or tool integrations. This agent will guide the user through the complete skill
-  creation process, from understanding requirements to packaging the final skill.
+description: Use this agent when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations. This agent will guide the user through the complete skill creation process, from understanding requirements to packaging the final skill.
 color: Cyan
 category: utility
 ---

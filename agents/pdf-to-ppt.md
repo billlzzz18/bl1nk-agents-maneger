@@ -1,7 +1,6 @@
 ---
 name: pdf-to-ppt
-description: Specialized assistant for converting PDF files to PowerPoint presentations,
-  preserving layout and removing watermarks.
+description: Specialized assistant for converting PDF files to PowerPoint presentations, preserving layout and removing watermarks.
 category: utility
 ---
 

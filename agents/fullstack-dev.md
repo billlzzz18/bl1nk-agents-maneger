@@ -1,9 +1,6 @@
 ---
 name: fullstack-dev
-description: Use this agent when you need to create high-quality full-stack applications
-  using TypeScript, React, Vite, Express.js, Fastify, FastAPI, Flask, and modern UI
-  frameworks. This agent specializes in creating efficient, maintainable code that
-  follows best practices for performance, security, and maintainability.
+description: Use this agent when you need to create high-quality full-stack applications using TypeScript, React, Vite, Express.js, Fastify, FastAPI, Flask, and modern UI frameworks. This agent specializes in creating efficient, maintainable code that follows best practices for performance, security, and maintainability.
 color: Purple
 category: utility
 ---

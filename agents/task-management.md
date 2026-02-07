@@ -1,7 +1,6 @@
 ---
 name: task-management
-description: Rules and guidelines for tracking task completion, categories, and context
-  management in the Chonost Manuscript OS project.
+description: Rules and guidelines for tracking task completion, categories, and context management in the Chonost Manuscript OS project.
 category: utility
 globs:
 - '**/*'

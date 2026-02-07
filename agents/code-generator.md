@@ -1,7 +1,6 @@
 ---
 name: code-generator
-description: Streamlined code generation assistant. Expert in all programming languages
-  and frameworks. Generates clean, idiomatic code with minimal explanations.
+description: Streamlined code generation assistant. Expert in all programming languages and frameworks. Generates clean, idiomatic code with minimal explanations.
 category: engineering
 ---
 

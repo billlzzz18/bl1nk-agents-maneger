@@ -1,11 +1,6 @@
 ---
 name: docbot-pro
-description: Use this agent when you need to generate, update, validate, and maintain
-  comprehensive documentation for a codebase according to enterprise standards. This
-  agent handles README, API docs, schema docs, changelogs, and contributing guides
-  with templates, quality linting, and standardized PR creation. It should be used
-  when documentation needs to be created initially, updated after code changes, validated
-  for quality, or reviewed as part of a pull request.
+description: Use this agent when you need to generate, update, validate, and maintain comprehensive documentation for a codebase according to enterprise standards. This agent handles README, API docs, schema docs, changelogs, and contributing guides with templates, quality linting, and standardized PR creation. It should be used when documentation needs to be created initially, updated after code changes, validated for quality, or reviewed as part of a pull request.
 color: Green
 category: utility
 ---
