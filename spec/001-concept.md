@@ -1,28 +1,41 @@
 # Concept
-## 📌 Project Status (Feb 7, 2026)
 
-Bl1nk Agents Manager is in active development and is not feature‑complete yet.
-This repo contains a working extension shell and a Rust core that is being
-brought to feature parity with existing TypeScript logic.
+## Purpose
+Bl1nk Agents Manager stitches together a Rust-based backend with ACP-compatible external agents
+and the existing VS Code/extension shell so users can run Gemini, Codex, and Qwen workflows from a
+single experience.
 
-**What works now**
-- Extension manifest and Gemini CLI scaffolding are present.
-- Core Rust modules exist for agents, hooks, MCP/ACP, sessions, and RPC.
-- Command and documentation sets are present (currently being refreshed).
+## Current Architecture (Feb 7, 2026)
+- **Rust core (`crates/core/src/`)**: Implements agents, hooks, session management, MCP/ACP adapters,
+  and filesystem helpers while exposing a thin CLI/adapter layer in `crates/core/src/adapters`.
+- **Features**: The new `features/background-agent` module replicates the TypeScript background-task
+  orchestration (concurrency manager, polling, notifications) in Rust so core logic can run server-side
+  without depending on the frontend runtime.
+- **Agents**: Agent definitions live under `crates/core/src/agents` (e.g., `atlas`, `liaison`, planners).
+  Hooks (e.g., `task_resume_info`, `background_notification`) live under `crates/core/src/hooks` and are
+  invoked through centralized registries and `AGENTS.md` guidance.
+- **Extension shell (`skills/`, `.gemini/`, `commands/`)**: Provides commands, skills, and references that the
+  CLI or community contributes to on top of the core runtime.
+- **Documentation + assets (`docs/`, `spec/`, `README.md`)**: Capture the agent catalog, workflows, and
+  architecture perspectives that external contributors need to follow.
 
-**In progress**
-- TypeScript → Rust parity for large subsystems (background agents, config,
-  ACP normalization).
-- End‑to‑end session flows for Gemini/Codex/Qwen within a unified adapter.
-- Validation of hook behavior and task orchestration across agents.
+## Tech Stack & Integrations
+- **Rust** for the core agent runtime, background manager, session lifecycle, and configuration/migration logic.
+- **ACP / MCP** adapters for Gemini/Codex/Qwen living under `crates/core/src/adapters`. These expose
+  JSON-RPC helpers to talk to `gemini`, `codex`, and other CLI binaries.
+- **Skill system** built on `.gemini/skills` + `skills/` directory so that Codex or Gemini can load instructions
+  (e.g., docs-writer, code-reviewer, pr-creator) without code changes.
+- **Hook + CLI scaffolding**: Scripts in `scripts/` and `commands/` define reusable operations while `justfile`
+  and `package.json` support running lint/test/build steps across the workspace.
 
-**Known gaps**
-- Some Rust modules compile but are not fully wired end‑to‑end.
-- Configuration loading/migration is still being aligned to actual runtime.
-- Authentication flows for some CLIs still require manual steps.
+## What you can do today
+1. Explore `docs/` to understand existing agents, workflows, and CLI cheatsheets.
+2. Run `cargo check -p bl1nk-core` to validate the Rust backend and review `crates/core/src/features` for
+   ongoing TypeScript → Rust rewrites such as `background-agent`.
+3. Read `skills/` and `.gemini/skills` to see how prompts, hooks, and commands are packaged for hybrid clients.
 
-**What to expect right now**
-- You can explore the architecture, commands, and agent catalogs.
-- Some workflows will still require manual setup or troubleshooting.
-
-For a complete non‑developer overview, see `docs/PROJECT_STATUS.md`.
+## Gaps & Next Priorities
+- Session-level flows still need polishing for authentication (OAuth approval handing) and tool chaining.
+- Configuration migration around `config/loader.rs` is being lined up with `spec/` docs so new agent hooks work
+  without manual edits.
+- Documentation across `docs/` and `spec/` must stay accurate as Rust modules replace TypeScript logic.

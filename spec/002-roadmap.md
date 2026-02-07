@@ -1,28 +1,28 @@
 # Roadmap
-## 📌 Project Status (Feb 7, 2026)
 
-Bl1nk Agents Manager is in active development and is not feature‑complete yet.
-This repo contains a working extension shell and a Rust core that is being
-brought to feature parity with existing TypeScript logic.
+## Themes
+1. **Stabilize the Rust core** (now) – finish rewriting TypeScript orchestrator, hook, and session logic
+   inside `crates/core`. Focused folders: `agents/`, `features/background-agent`, `config/`, `mcp/`, and `session/`.
+2. **Unify ACP adapters** (next sprint) – ensure `adapters/acp` + `cli` entrypoints (e.g., `run_gemini`) can
+   correctly translate between ACP payloads and the Rust runtime, including tool calls, prompts, and
+   authentication flows.
+3. **Build reliable workflows** – script tests for agent onboarding via `skills/`, provide CLI cheatsheets, and
+   document `docs/PROJECT_STATUS.md` plus `spec/` so contributors understand where logic lives.
 
-**What works now**
-- Extension manifest and Gemini CLI scaffolding are present.
-- Core Rust modules exist for agents, hooks, MCP/ACP, sessions, and RPC.
-- Command and documentation sets are present (currently being refreshed).
+## Milestones (Feb 2026)
+| Milestone | Status | Notes |
+| --- | --- | --- |
+| Background agent parity | In review | `features/background-agent` now compiles and handles queueing/polling; remaining tasks: notification hooks and MCP calls validation.
+| Config/loader + migration | In progress | `config/loader.rs` handles JSONC detection; next step is aligning with `spec/configs` layout and hooking into nightly migration scripts.
+| Docs refresh | Ongoing | `docs/AGENT_*`, `docs/ARCHITECTURE.md`, and `spec/` files are being rewritten to explain the new directory layout.
 
-**In progress**
-- TypeScript → Rust parity for large subsystems (background agents, config,
-  ACP normalization).
-- End‑to‑end session flows for Gemini/Codex/Qwen within a unified adapter.
-- Validation of hook behavior and task orchestration across agents.
+## Upcoming work (ordered)
+1. Finish ACP handshake (OAuth flow + `GeminiBackend` event emission). Check points: `session/mod.rs`, `adapters/acp/`, `cli/` commands.
+2. Expand hook coverage (e.g., `background_notification`, `task_resume_info`) and document in `crates/core/src/hooks/*/AGENTS.md`.
+3. Map command/skill ownership so Prism tasks (e.g., `docs-writer`, `code-reviewer`) can run without manual prompts.
+4. Harden tests: add unit/behavioral tests for `features/background-agent` and `session` flows before merging into `main`.
 
-**Known gaps**
-- Some Rust modules compile but are not fully wired end‑to‑end.
-- Configuration loading/migration is still being aligned to actual runtime.
-- Authentication flows for some CLIs still require manual steps.
-
-**What to expect right now**
-- You can explore the architecture, commands, and agent catalogs.
-- Some workflows will still require manual setup or troubleshooting.
-
-For a complete non‑developer overview, see `docs/PROJECT_STATUS.md`.
+## Success checkpoints
+- `cargo check -p bl1nk-core` plus `cargo fmt` run successfully without warnings from the highlighted modules.
+- Documentation (spec, docs/AGENT*) matches the code location of agents/hooks being changed.
+- The extension shell (`skills/`, `.gemini/commands/`) smoothly loads skills such as `docs-writer` and `pr-creator`.
