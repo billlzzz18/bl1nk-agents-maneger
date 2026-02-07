@@ -91,31 +91,3 @@ Response rules:
 
 Your output goes straight to the main agent for continued work."####.to_string()
 }
-
-impl Default for AgentConfig {
-    fn default() -> Self {
-        Self {
-            id: String::new(),
-            name: String::new(),
-            agent_type: String::new(),
-            command: None,
-            args: None,
-            extension_name: None,
-            rate_limit: crate::agents::types::RateLimit::default(),
-            capabilities: vec![],
-            priority: 0,
-            enabled: true,
-            description: None,
-            model: None,
-            temperature: None,
-            max_tokens: None,
-            prompt: None,
-            color: None,
-            permission: None,
-            mode: None,
-            thinking: None,
-            reasoning_effort: None,
-            skills: None,
-        }
-    }
-}
