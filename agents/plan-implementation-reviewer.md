@@ -4,7 +4,14 @@ description: Use this agent when you need to validate that an implementation pla
   was correctly executed, verifying all success criteria and identifying any deviations
   or issues. This agent should be run after commits are made to analyze the changes
   against the original plan, checking for drift and completeness of implementation.
-tools: ["Glob", "Grep", "LS", "Read", "TodoWrite", "WebFetch", "WebSearch"]
+tools:
+- Glob
+- Grep
+- LS
+- Read
+- TodoWrite
+- WebFetch
+- WebSearch
 color: Blue
 category: utility
 ---

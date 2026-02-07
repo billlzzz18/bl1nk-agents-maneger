@@ -4,7 +4,14 @@ description: Expert UI/frontend developer for creating, modifying, or reviewing 
   code, UI components, and user interfaces. Use when building React components, responsive
   designs, or any frontend development tasks. PROACTIVELY use for UI/UX implementation,
   component architecture, and frontend best practices.
-tools: ["Bash", "Glob", "Grep", "LS", "Read", "WebFetch", "Write"]
+tools:
+- Bash
+- Glob
+- Grep
+- LS
+- Read
+- WebFetch
+- Write
 category: utility
 ---
 

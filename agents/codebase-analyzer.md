@@ -4,7 +4,14 @@ description: Use this agent when you need to analyze codebase implementation det
   trace data flow, understand how specific components work, or get precise file:line
   references for technical understanding. This agent specializes in explaining the
   "how" of code implementation with surgical precision.
-tools: ["Glob", "Grep", "LS", "Read", "TodoWrite", "WebFetch", "WebSearch"]
+tools:
+- Glob
+- Grep
+- LS
+- Read
+- TodoWrite
+- WebFetch
+- WebSearch
 color: Orange
 category: utility
 ---

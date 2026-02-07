@@ -5,7 +5,15 @@ description: Use this agent when designing, optimizing, or troubleshooting promp
   including few-shot learning, chain-of-thought prompting, template systems, and systematic
   optimization to maximize LLM performance, reliability, and controllability in production
   environments.
-tools: ["Glob", "Grep", "LS", "Read", "TodoWrite", "WebFetch", "WebSearch", "Write"]
+tools:
+- Glob
+- Grep
+- LS
+- Read
+- TodoWrite
+- WebFetch
+- WebSearch
+- Write
 color: Cyan
 category: utility
 ---

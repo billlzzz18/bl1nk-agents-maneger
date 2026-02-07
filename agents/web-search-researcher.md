@@ -4,7 +4,11 @@ description: Used to perform web searches from a URL and analyze the contents ba
 mode: subagent
 model: anthropic/claude-3-5-haiku-20241022
 temperature: 0.1
-tools: ["Glob", "Grep", "LS", "Read"]
+tools:
+- Glob
+- Grep
+- LS
+- Read
 name: web-search-researcher
 category: utility
 ---

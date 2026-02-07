@@ -4,7 +4,15 @@ description: Use this agent when you need to create well-structured Claude Code 
   commands with proper structure and best practices. This agent specializes in analyzing
   command requirements, determining appropriate location, and creating properly structured
   command files with comprehensive documentation and validation.
-tools: ["Glob", "Grep", "LS", "Read", "TodoWrite", "WebFetch", "WebSearch", "Write"]
+tools:
+- Glob
+- Grep
+- LS
+- Read
+- TodoWrite
+- WebFetch
+- WebSearch
+- Write
 color: Cyan
 category: utility
 ---

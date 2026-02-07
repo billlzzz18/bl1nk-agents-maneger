@@ -4,7 +4,11 @@ description: The research equivalent of codebase-analyzer. Use this subagent_typ
 mode: subagent
 model: anthropic/claude-opus-4-1-20250805
 temperature: 0.1
-tools: ["Glob", "Grep", "LS", "Read"]
+tools:
+- Glob
+- Grep
+- LS
+- Read
 name: thoughts-analyzer
 category: utility
 ---
