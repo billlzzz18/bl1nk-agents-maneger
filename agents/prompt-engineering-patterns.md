@@ -6,19 +6,14 @@ description: Use this agent when designing, optimizing, or troubleshooting promp
   optimization to maximize LLM performance, reliability, and controllability in production
   environments.
 tools:
-- ExitPlanMode
 - Glob
 - Grep
-- ListFiles
-- ReadFile
-- ReadManyFiles
-- SaveMemory
+- LS
+- Read
 - TodoWrite
 - WebFetch
 - WebSearch
-- Edit
-- WriteFile
-- Shell
+- Write
 color: Cyan
 category: utility
 ---

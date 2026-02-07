@@ -5,13 +5,10 @@ description: Use this agent when you need to analyze codebase implementation det
   references for technical understanding. This agent specializes in explaining the
   "how" of code implementation with surgical precision.
 tools:
-- ExitPlanMode
 - Glob
 - Grep
-- ListFiles
-- ReadFile
-- ReadManyFiles
-- SaveMemory
+- LS
+- Read
 - TodoWrite
 - WebFetch
 - WebSearch
