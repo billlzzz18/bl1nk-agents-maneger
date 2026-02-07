@@ -46,7 +46,9 @@ def fix_file(filepath):
                                  not body_lines[-1].strip()):
                 body_lines.pop()
             body = '\n'.join(body_lines)
-
+        else:
+            # If we didn't detect a proper trailing junk block, ignore any collected junk_data
+            junk_data = {}
     try:
         fm = yaml.safe_load(fm_raw)
     except:
