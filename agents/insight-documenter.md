@@ -3,7 +3,7 @@ name: insight-documenter
 description: Technical breakthrough documentation specialist. Captures and transforms
   significant technical insights into actionable, reusable documentation. Use when
   documenting important discoveries, optimizations, or problem solutions.
-tools: Write, Read, LS, Bash
+tools: ["Bash", "LS", "Read", "Write"]
 color: pink
 category: utility
 ---

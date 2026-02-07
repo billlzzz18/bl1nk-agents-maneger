@@ -6,18 +6,7 @@ description: "Locates files, directories, and components relevant to a feature o
 mode: subagent
 model: anthropic/claude-opus-4-1-20250805
 temperature: 0.1
-tools:
-  read: false
-  grep: true
-  glob: true
-  list: true
-  bash: false
-  edit: false
-  write: false
-  patch: false
-  todoread: false
-  todowrite: false
-  webfetch: false
+tools: ["Glob", "Grep", "LS"]
 name: codebase-locator
 category: utility
 ---
