@@ -5,13 +5,10 @@ description: Use this agent when you need to validate that an implementation pla
   or issues. This agent should be run after commits are made to analyze the changes
   against the original plan, checking for drift and completeness of implementation.
 tools:
-- ExitPlanMode
 - Glob
 - Grep
-- ListFiles
-- ReadFile
-- ReadManyFiles
-- SaveMemory
+- LS
+- Read
 - TodoWrite
 - WebFetch
 - WebSearch
