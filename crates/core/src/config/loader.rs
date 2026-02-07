@@ -171,24 +171,6 @@ pub fn load_config_from_path(
     }
 }
 
-fn merge_hashmap<T: Clone + std::cmp::Eq + std::hash::Hash>(
-    base: Option<HashSet<T>>,
-    override_set: Option<HashSet<T>>,
-) -> Option<HashSet<T>> {
-    let mut result = HashSet::new();
-    if let Some(base_set) = base {
-        result.extend(base_set);
-    }
-    if let Some(override_set) = override_set {
-        result.extend(override_set);
-    }
-    if result.is_empty() {
-        None
-    } else {
-        Some(result)
-    }
-}
-
 fn merge_vec_unique<T: Clone + std::cmp::Eq + std::hash::Hash>(
     base: Option<Vec<T>>,
     override_vec: Option<Vec<T>>,

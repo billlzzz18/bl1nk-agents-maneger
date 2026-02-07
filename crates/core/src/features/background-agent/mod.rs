@@ -340,7 +340,6 @@ impl<C: BackgroundClient + 'static> BackgroundManager<C> {
         let ctx = SpawnerContext {
             client: self.client.clone(),
             directory: self.directory.clone(),
-            concurrency_manager: self.concurrency_manager.clone(),
             tmux_enabled: self.tmux_enabled,
             on_subagent_session_created: self.on_subagent_session_created.clone(),
         };

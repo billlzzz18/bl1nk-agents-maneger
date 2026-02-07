@@ -19,15 +19,15 @@ use std::os::windows::process::CommandExt;
 /// This ensures credentials don't persist in the process environment after a session ends.
 #[derive(Debug)]
 struct EnvVarGuard {
-    var_name: String,
+    _var_name: String,
 }
 
 impl EnvVarGuard {
     fn new(var_name: impl Into<String>, value: impl AsRef<str>) -> Self {
         let var_name = var_name.into();
         std::env::set_var(&var_name, value.as_ref());
-        Self { var_name }
-}
+        Self { _var_name: var_name }
+    }
 }
 
 fn ensure_public_base_url(url: &str) -> Result<()> {

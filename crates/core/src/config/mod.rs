@@ -14,7 +14,6 @@ pub use config::RoutingTier;
 pub use config::RateLimitingConfig;
 
 // Re-export from other modules
-pub use extra_types::*;
 pub use handler::{ConfigContext, ConfigHandler, ConfigHandlerDeps};
 pub use loader::*;
 pub use schema::*;
