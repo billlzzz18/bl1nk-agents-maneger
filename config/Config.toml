@@ -90,6 +90,7 @@ priority = 200 # Priority ต่ำกว่ากฎที่เฉพาะเ
 task_type = "code-generation"
 # กฎ Fallback สำหรับ code-generation (ไม่มี keyword)
 # จะถูกใช้เมื่อ prompt ไม่เข้ากับกฎอื่นที่มี keyword
+keywords = []
 preferred_agents = ["codex-helper"]
 priority = 50 # Priority ต่ำที่สุดในกลุ่ม
 

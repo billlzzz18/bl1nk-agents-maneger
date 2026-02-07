@@ -1,17 +1,19 @@
 pub mod protocol;
+use crate::agents::{AgentExecutor, AgentRegistry};
 use crate::config::Config;
-use crate::agents::{AgentRegistry, AgentExecutor};
 use crate::rate_limit::RateLimitTracker;
 use anyhow::Result;
-use pmcp::{ServerBuilder, TypedTool, RequestHandlerExtra, Error as McpError};
-use serde::{Deserialize, Serialize};
+use pmcp::{RequestHandlerExtra, ServerBuilder, TypedTool};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
 pub struct Orchestrator {
+    #[allow(dead_code)]
     config: Config,
     agent_registry: Arc<RwLock<AgentRegistry>>,
+    #[allow(dead_code)]
     rate_limiter: Arc<RwLock<RateLimitTracker>>,
     executor: Arc<AgentExecutor>,
 }
@@ -65,21 +67,17 @@ impl Orchestrator {
         // โค้ดส่วนนี้ยังคงทำงานได้ถูกต้อง
         // `config.agents` จะมี pmat-internal agent รวมอยู่ด้วย
         // ถ้าเราแก้ไข `config.rs` ให้เพิ่มมันเข้าไปเมื่อเปิดฟีเจอร์ `bundle-pmat`
-        let agent_registry = Arc::new(RwLock::new(
-            AgentRegistry::new(config.agents.clone())
-        ));
+        let agent_registry = Arc::new(RwLock::new(AgentRegistry::new(config.agents.clone())));
 
-        let rate_limiter = Arc::new(RwLock::new(
-            RateLimitTracker::new(config.rate_limiting.clone())
-        ));
+        let rate_limiter = Arc::new(RwLock::new(RateLimitTracker::new(
+            config.rate_limiting.clone(),
+        )));
 
-        let executor = Arc::new(
-            AgentExecutor::new(
-                agent_registry.clone(),
-                rate_limiter.clone(),
-                config.routing.clone(),
-            )
-        );
+        let executor = Arc::new(AgentExecutor::new(
+            agent_registry.clone(),
+            rate_limiter.clone(),
+            config.routing.clone(),
+        ));
 
         Ok(Self {
             config,
@@ -110,7 +108,7 @@ impl Orchestrator {
                         })
                     }
                 })
-                .with_description("Delegate a task to an appropriate sub-agent")
+                .with_description("Delegate a task to an appropriate sub-agent"),
             )
             // Tool: Query agent status
             .tool(
@@ -125,7 +123,7 @@ impl Orchestrator {
                         })
                     }
                 })
-                .with_description("Get status of agents and running tasks")
+                .with_description("Get status of agents and running tasks"),
             )
             .build()?;
 

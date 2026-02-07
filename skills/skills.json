@@ -2,7 +2,6 @@
   "version": "1.0.0",
   "last_updated": "2026-02-07",
   "description": "Central skills registry with standardized tags for cross-model compatibility",
-
   "tag_schema": {
     "domain": {
       "description": "Primary domain classification",
@@ -23,7 +22,12 @@
     },
     "complexity": {
       "description": "Task complexity level",
-      "values": ["low", "medium", "high", "expert"],
+      "values": [
+        "low",
+        "medium",
+        "high",
+        "expert"
+      ],
       "required": true,
       "max_items": 1
     },
@@ -82,7 +86,12 @@
     },
     "model_compatibility": {
       "description": "Model compatibility level",
-      "values": ["universal", "standard", "enhanced", "specialized"],
+      "values": [
+        "universal",
+        "standard",
+        "enhanced",
+        "specialized"
+      ],
       "required": false,
       "max_items": 1
     },
@@ -116,7 +125,6 @@
       "max_items": 2
     }
   },
-
   "skills": [
     {
       "id": "skill-action-architect",
@@ -127,12 +135,29 @@
       "tags": {
         "domain": "development",
         "complexity": "medium",
-        "category": ["creation", "documentation", "validation"],
-        "input_type": ["text", "yaml", "json"],
-        "output_type": ["code", "documentation", "file"],
+        "category": [
+          "creation",
+          "documentation",
+          "validation"
+        ],
+        "input_type": [
+          "text",
+          "yaml",
+          "json"
+        ],
+        "output_type": [
+          "code",
+          "documentation",
+          "file"
+        ],
         "model_compatibility": "standard",
-        "dependencies": ["file-system"],
-        "personality": ["professional", "technical"]
+        "dependencies": [
+          "file-system"
+        ],
+        "personality": [
+          "professional",
+          "technical"
+        ]
       },
       "version": "0.1.0",
       "use_cases": [
@@ -141,7 +166,9 @@
         "Debugging API integrations",
         "Setting up authentication"
       ],
-      "related_skills": ["skill-agent-development"]
+      "related_skills": [
+        "skill-agent-development"
+      ]
     },
     {
       "id": "skill-agent-development",
@@ -152,12 +179,26 @@
       "tags": {
         "domain": "development",
         "complexity": "medium",
-        "category": ["creation", "documentation"],
-        "input_type": ["text", "markdown"],
-        "output_type": ["code", "documentation"],
+        "category": [
+          "creation",
+          "documentation"
+        ],
+        "input_type": [
+          "text",
+          "markdown"
+        ],
+        "output_type": [
+          "code",
+          "documentation"
+        ],
         "model_compatibility": "standard",
-        "dependencies": ["none"],
-        "personality": ["professional", "educational"]
+        "dependencies": [
+          "none"
+        ],
+        "personality": [
+          "professional",
+          "educational"
+        ]
       },
       "version": "0.1.0",
       "use_cases": [
@@ -166,7 +207,10 @@
         "Defining triggering conditions",
         "Agent best practices"
       ],
-      "related_skills": ["skill-command-creation", "skill-action-architect"]
+      "related_skills": [
+        "skill-command-creation",
+        "skill-action-architect"
+      ]
     },
     {
       "id": "skill-ai-workflow-orchestrator",
@@ -177,12 +221,27 @@
       "tags": {
         "domain": "workflow",
         "complexity": "high",
-        "category": ["workflow", "management", "analysis"],
-        "input_type": ["text", "json"],
-        "output_type": ["guidance", "analysis"],
+        "category": [
+          "workflow",
+          "management",
+          "analysis"
+        ],
+        "input_type": [
+          "text",
+          "json"
+        ],
+        "output_type": [
+          "guidance",
+          "analysis"
+        ],
         "model_compatibility": "enhanced",
-        "dependencies": ["none"],
-        "personality": ["analytical", "professional"]
+        "dependencies": [
+          "none"
+        ],
+        "personality": [
+          "analytical",
+          "professional"
+        ]
       },
       "version": "0.1.0",
       "use_cases": [
@@ -191,7 +250,9 @@
         "Managing workflow states",
         "Coordinating multiple agents"
       ],
-      "related_skills": ["skill-task-management"]
+      "related_skills": [
+        "skill-task-management"
+      ]
     },
     {
       "id": "skill-algorithmic-art",
@@ -202,12 +263,26 @@
       "tags": {
         "domain": "creative",
         "complexity": "medium",
-        "category": ["creation", "design"],
-        "input_type": ["text", "code"],
-        "output_type": ["code", "file", "diagram"],
+        "category": [
+          "creation",
+          "design"
+        ],
+        "input_type": [
+          "text",
+          "code"
+        ],
+        "output_type": [
+          "code",
+          "file",
+          "diagram"
+        ],
         "model_compatibility": "standard",
-        "dependencies": ["file-system"],
-        "personality": ["creative"]
+        "dependencies": [
+          "file-system"
+        ],
+        "personality": [
+          "creative"
+        ]
       },
       "version": "0.1.0",
       "use_cases": [
@@ -215,7 +290,9 @@
         "Creating visualizations",
         "Programming graphics"
       ],
-      "related_skills": ["skill-canvas-design"]
+      "related_skills": [
+        "skill-canvas-design"
+      ]
     },
     {
       "id": "skill-artifacts-builder",
@@ -226,12 +303,25 @@
       "tags": {
         "domain": "development",
         "complexity": "medium",
-        "category": ["creation", "code-generation"],
-        "input_type": ["text", "code"],
-        "output_type": ["code", "file"],
+        "category": [
+          "creation",
+          "code-generation"
+        ],
+        "input_type": [
+          "text",
+          "code"
+        ],
+        "output_type": [
+          "code",
+          "file"
+        ],
         "model_compatibility": "standard",
-        "dependencies": ["shell"],
-        "personality": ["technical"]
+        "dependencies": [
+          "shell"
+        ],
+        "personality": [
+          "technical"
+        ]
       },
       "version": "0.1.0",
       "use_cases": [
@@ -239,7 +329,9 @@
         "Bundling components",
         "Managing dependencies"
       ],
-      "related_skills": ["skill-agent-development"]
+      "related_skills": [
+        "skill-agent-development"
+      ]
     },
     {
       "id": "skill-auto-dupicate-fixer",
@@ -250,12 +342,26 @@
       "tags": {
         "domain": "engineering",
         "complexity": "medium",
-        "category": ["code-analysis", "validation"],
-        "input_type": ["code", "file"],
-        "output_type": ["code", "guidance"],
+        "category": [
+          "code-analysis",
+          "validation"
+        ],
+        "input_type": [
+          "code",
+          "file"
+        ],
+        "output_type": [
+          "code",
+          "guidance"
+        ],
         "model_compatibility": "standard",
-        "dependencies": ["file-system"],
-        "personality": ["analytical", "technical"]
+        "dependencies": [
+          "file-system"
+        ],
+        "personality": [
+          "analytical",
+          "technical"
+        ]
       },
       "version": "0.1.0",
       "use_cases": [
@@ -263,7 +369,9 @@
         "Refactoring duplicates",
         "Code deduplication"
       ],
-      "related_skills": ["skill-code-review"]
+      "related_skills": [
+        "skill-code-review"
+      ]
     },
     {
       "id": "skill-brand-guidelines",
@@ -274,12 +382,25 @@
       "tags": {
         "domain": "design",
         "complexity": "low",
-        "category": ["documentation", "validation"],
-        "input_type": ["text", "file"],
-        "output_type": ["documentation", "guidance"],
+        "category": [
+          "documentation",
+          "validation"
+        ],
+        "input_type": [
+          "text",
+          "file"
+        ],
+        "output_type": [
+          "documentation",
+          "guidance"
+        ],
         "model_compatibility": "universal",
-        "dependencies": ["none"],
-        "personality": ["professional"]
+        "dependencies": [
+          "none"
+        ],
+        "personality": [
+          "professional"
+        ]
       },
       "version": "0.1.0",
       "use_cases": [
@@ -298,12 +419,28 @@
       "tags": {
         "domain": "engineering",
         "complexity": "high",
-        "category": ["creation", "architecture", "development"],
-        "input_type": ["text", "code", "json"],
-        "output_type": ["code", "documentation"],
+        "category": [
+          "creation",
+          "architecture",
+          "development"
+        ],
+        "input_type": [
+          "text",
+          "code",
+          "json"
+        ],
+        "output_type": [
+          "code",
+          "documentation"
+        ],
         "model_compatibility": "enhanced",
-        "dependencies": ["shell", "git"],
-        "personality": ["technical"]
+        "dependencies": [
+          "shell",
+          "git"
+        ],
+        "personality": [
+          "technical"
+        ]
       },
       "version": "0.1.0",
       "use_cases": [
@@ -311,7 +448,9 @@
         "Deploying AI agents",
         "Cloudflare platform integration"
       ],
-      "related_skills": ["skill-agent-development"]
+      "related_skills": [
+        "skill-agent-development"
+      ]
     },
     {
       "id": "skill-canvas-design",
@@ -322,12 +461,25 @@
       "tags": {
         "domain": "creative",
         "complexity": "medium",
-        "category": ["creation", "design"],
-        "input_type": ["text", "file"],
-        "output_type": ["file", "diagram"],
+        "category": [
+          "creation",
+          "design"
+        ],
+        "input_type": [
+          "text",
+          "file"
+        ],
+        "output_type": [
+          "file",
+          "diagram"
+        ],
         "model_compatibility": "standard",
-        "dependencies": ["file-system"],
-        "personality": ["creative"]
+        "dependencies": [
+          "file-system"
+        ],
+        "personality": [
+          "creative"
+        ]
       },
       "version": "0.1.0",
       "use_cases": [
@@ -335,128 +487,303 @@
         "Designing fonts and layouts",
         "Building graphical interfaces"
       ],
-      "related_skills": ["skill-algorithmic-art"]
+      "related_skills": [
+        "skill-algorithmic-art"
+      ]
+    },
+    {
+      "id": "skill-agents-manager-development",
+      "name": "Agents Manager Development",
+      "type": "skill",
+      "source": "skills/agents-manager-development/",
+      "description": "Developing and maintaining the Bl1nk Agents Manager extension workflows",
+      "tags": {
+        "domain": "development",
+        "complexity": "medium",
+        "category": [
+          "creation",
+          "workflow",
+          "management"
+        ],
+        "input_type": [
+          "text",
+          "code",
+          "file"
+        ],
+        "output_type": [
+          "guidance",
+          "documentation",
+          "code"
+        ],
+        "model_compatibility": "standard",
+        "dependencies": [
+          "file-system",
+          "shell"
+        ],
+        "personality": [
+          "professional",
+          "technical"
+        ]
+      },
+      "version": "0.1.0",
+      "use_cases": [
+        "Adding or updating agents",
+        "Creating commands and hooks",
+        "Adjusting routing and configuration",
+        "Maintaining skills and registries"
+      ],
+      "related_skills": [
+        "skill-agent-development",
+        "skill-action-architect"
+      ]
     }
   ],
-
   "agent_mappings": {
     "description": "Mapping between agents and skills for unified system",
     "agents": [
       {
         "agent_id": "architect",
-        "skill_ids": ["skill-ai-workflow-orchestrator"],
+        "skill_ids": [
+          "skill-ai-workflow-orchestrator"
+        ],
         "tags": {
           "domain": "engineering",
           "complexity": "high",
-          "category": ["architecture", "design", "documentation"],
-          "input_type": ["text", "code"],
-          "output_type": ["documentation", "diagram"],
+          "category": [
+            "architecture",
+            "design",
+            "documentation"
+          ],
+          "input_type": [
+            "text",
+            "code"
+          ],
+          "output_type": [
+            "documentation",
+            "diagram"
+          ],
           "model_compatibility": "enhanced",
-          "dependencies": ["none"],
-          "personality": ["professional", "analytical"]
+          "dependencies": [
+            "none"
+          ],
+          "personality": [
+            "professional",
+            "analytical"
+          ]
         }
       },
       {
         "agent_id": "code-generator",
-        "skill_ids": ["skill-artifacts-builder"],
+        "skill_ids": [
+          "skill-artifacts-builder"
+        ],
         "tags": {
           "domain": "engineering",
           "complexity": "medium",
-          "category": ["code-generation", "creation"],
-          "input_type": ["text", "code"],
-          "output_type": ["code"],
+          "category": [
+            "code-generation",
+            "creation"
+          ],
+          "input_type": [
+            "text",
+            "code"
+          ],
+          "output_type": [
+            "code"
+          ],
           "model_compatibility": "standard",
-          "dependencies": ["none"],
-          "personality": ["technical"]
+          "dependencies": [
+            "none"
+          ],
+          "personality": [
+            "technical"
+          ]
         }
       },
       {
         "agent_id": "code-reviewer",
-        "skill_ids": ["skill-auto-dupicate-fixer"],
+        "skill_ids": [
+          "skill-auto-dupicate-fixer"
+        ],
         "tags": {
           "domain": "engineering",
           "complexity": "medium",
-          "category": ["code-analysis", "validation"],
-          "input_type": ["code", "text"],
-          "output_type": ["documentation", "guidance"],
+          "category": [
+            "code-analysis",
+            "validation"
+          ],
+          "input_type": [
+            "code",
+            "text"
+          ],
+          "output_type": [
+            "documentation",
+            "guidance"
+          ],
           "model_compatibility": "standard",
-          "dependencies": ["none"],
-          "personality": ["analytical", "professional"]
+          "dependencies": [
+            "none"
+          ],
+          "personality": [
+            "analytical",
+            "professional"
+          ]
         }
       },
       {
         "agent_id": "agent-creator",
-        "skill_ids": ["skill-agent-development"],
+        "skill_ids": [
+          "skill-agent-development"
+        ],
         "tags": {
           "domain": "development",
           "complexity": "medium",
-          "category": ["creation", "documentation"],
-          "input_type": ["text", "markdown"],
-          "output_type": ["code", "documentation"],
+          "category": [
+            "creation",
+            "documentation"
+          ],
+          "input_type": [
+            "text",
+            "markdown"
+          ],
+          "output_type": [
+            "code",
+            "documentation"
+          ],
           "model_compatibility": "standard",
-          "dependencies": ["none"],
-          "personality": ["professional", "educational"]
+          "dependencies": [
+            "none"
+          ],
+          "personality": [
+            "professional",
+            "educational"
+          ]
         }
       },
       {
         "agent_id": "cloudflare",
-        "skill_ids": ["skill-building-ai-agent-on-cloudflare"],
+        "skill_ids": [
+          "skill-building-ai-agent-on-cloudflare"
+        ],
         "tags": {
           "domain": "engineering",
           "complexity": "high",
-          "category": ["architecture", "development", "creation"],
-          "input_type": ["text", "code", "json"],
-          "output_type": ["code", "documentation"],
+          "category": [
+            "architecture",
+            "development",
+            "creation"
+          ],
+          "input_type": [
+            "text",
+            "code",
+            "json"
+          ],
+          "output_type": [
+            "code",
+            "documentation"
+          ],
           "model_compatibility": "enhanced",
-          "dependencies": ["shell", "git"],
-          "personality": ["technical"]
+          "dependencies": [
+            "shell",
+            "git"
+          ],
+          "personality": [
+            "technical"
+          ]
         }
       },
       {
         "agent_id": "creative-writer",
-        "skill_ids": ["skill-algorithmic-art"],
+        "skill_ids": [
+          "skill-algorithmic-art"
+        ],
         "tags": {
           "domain": "creative",
           "complexity": "low",
-          "category": ["creation", "design"],
-          "input_type": ["text"],
-          "output_type": ["text", "persona"],
+          "category": [
+            "creation",
+            "design"
+          ],
+          "input_type": [
+            "text"
+          ],
+          "output_type": [
+            "text",
+            "persona"
+          ],
           "model_compatibility": "universal",
-          "dependencies": ["none"],
-          "personality": ["creative"]
+          "dependencies": [
+            "none"
+          ],
+          "personality": [
+            "creative"
+          ]
         }
       },
       {
         "agent_id": "orchestrator",
-        "skill_ids": ["skill-ai-workflow-orchestrator"],
+        "skill_ids": [
+          "skill-ai-workflow-orchestrator"
+        ],
         "tags": {
           "domain": "management",
           "complexity": "high",
-          "category": ["workflow", "management", "analysis"],
-          "input_type": ["text", "json"],
-          "output_type": ["guidance", "analysis"],
+          "category": [
+            "workflow",
+            "management",
+            "analysis"
+          ],
+          "input_type": [
+            "text",
+            "json"
+          ],
+          "output_type": [
+            "guidance",
+            "analysis"
+          ],
           "model_compatibility": "enhanced",
-          "dependencies": ["none"],
-          "personality": ["analytical", "professional"]
+          "dependencies": [
+            "none"
+          ],
+          "personality": [
+            "analytical",
+            "professional"
+          ]
         }
       },
       {
         "agent_id": "docbot-pro",
-        "skill_ids": ["skill-brand-guidelines"],
+        "skill_ids": [
+          "skill-brand-guidelines"
+        ],
         "tags": {
           "domain": "documentation",
           "complexity": "medium",
-          "category": ["documentation", "creation"],
-          "input_type": ["text", "code", "file"],
-          "output_type": ["documentation", "file"],
+          "category": [
+            "documentation",
+            "creation"
+          ],
+          "input_type": [
+            "text",
+            "code",
+            "file"
+          ],
+          "output_type": [
+            "documentation",
+            "file"
+          ],
           "model_compatibility": "standard",
-          "dependencies": ["file-system"],
-          "personality": ["professional", "technical"]
+          "dependencies": [
+            "file-system"
+          ],
+          "personality": [
+            "professional",
+            "technical"
+          ]
         }
       }
     ]
   },
-
   "command_mappings": {
     "description": "Standardized tags for command agents",
     "commands": [
@@ -465,12 +792,25 @@
         "tags": {
           "domain": "command",
           "complexity": "low",
-          "category": ["guidance", "search"],
-          "input_type": ["text", "json"],
-          "output_type": ["guidance", "text"],
+          "category": [
+            "guidance",
+            "search"
+          ],
+          "input_type": [
+            "text",
+            "json"
+          ],
+          "output_type": [
+            "guidance",
+            "text"
+          ],
           "model_compatibility": "universal",
-          "dependencies": ["json-registry"],
-          "personality": ["professional"]
+          "dependencies": [
+            "json-registry"
+          ],
+          "personality": [
+            "professional"
+          ]
         }
       },
       {
@@ -478,12 +818,25 @@
         "tags": {
           "domain": "command",
           "complexity": "low",
-          "category": ["guidance", "documentation"],
-          "input_type": ["text"],
-          "output_type": ["guidance", "text"],
+          "category": [
+            "guidance",
+            "documentation"
+          ],
+          "input_type": [
+            "text"
+          ],
+          "output_type": [
+            "guidance",
+            "text"
+          ],
           "model_compatibility": "universal",
-          "dependencies": ["python", "json-registry"],
-          "personality": ["professional"]
+          "dependencies": [
+            "python",
+            "json-registry"
+          ],
+          "personality": [
+            "professional"
+          ]
         }
       },
       {
@@ -491,12 +844,26 @@
         "tags": {
           "domain": "command",
           "complexity": "medium",
-          "category": ["creation", "management"],
-          "input_type": ["text"],
-          "output_type": ["code", "documentation"],
+          "category": [
+            "creation",
+            "management"
+          ],
+          "input_type": [
+            "text"
+          ],
+          "output_type": [
+            "code",
+            "documentation"
+          ],
           "model_compatibility": "standard",
-          "dependencies": ["python", "file-system", "shell"],
-          "personality": ["professional"]
+          "dependencies": [
+            "python",
+            "file-system",
+            "shell"
+          ],
+          "personality": [
+            "professional"
+          ]
         }
       },
       {
@@ -504,17 +871,27 @@
         "tags": {
           "domain": "command",
           "complexity": "low",
-          "category": ["guidance", "management"],
-          "input_type": ["text"],
-          "output_type": ["guidance"],
+          "category": [
+            "guidance",
+            "management"
+          ],
+          "input_type": [
+            "text"
+          ],
+          "output_type": [
+            "guidance"
+          ],
           "model_compatibility": "universal",
-          "dependencies": ["python"],
-          "personality": ["professional"]
+          "dependencies": [
+            "python"
+          ],
+          "personality": [
+            "professional"
+          ]
         }
       }
     ]
   },
-
   "cross_reference": {
     "description": "Cross-references between agents, commands, and skills",
     "by_domain": {
@@ -540,32 +917,56 @@
           "skill-creator",
           "plugin-validator"
         ],
-        "commands": ["new"],
+        "commands": [
+          "new"
+        ],
         "skills": [
           "skill-agent-development",
           "skill-action-architect",
-          "skill-artifacts-builder"
+          "skill-artifacts-builder",
+          "skill-agents-manager-development"
         ]
       },
       "creative": {
-        "agents": ["creative-writer"],
+        "agents": [
+          "creative-writer"
+        ],
         "commands": [],
-        "skills": ["skill-algorithmic-art", "skill-canvas-design"]
+        "skills": [
+          "skill-algorithmic-art",
+          "skill-canvas-design"
+        ]
       },
       "command": {
         "agents": [],
-        "commands": ["examples", "info", "switch"],
+        "commands": [
+          "examples",
+          "info",
+          "switch"
+        ],
         "skills": []
       },
       "documentation": {
-        "agents": ["docbot-pro", "docs-researcher", "insight-documenter"],
+        "agents": [
+          "docbot-pro",
+          "docs-researcher",
+          "insight-documenter"
+        ],
         "commands": [],
-        "skills": ["skill-brand-guidelines"]
+        "skills": [
+          "skill-brand-guidelines"
+        ]
       },
       "workflow": {
-        "agents": ["orchestrator", "deep-reflector", "github-issue-fixer"],
+        "agents": [
+          "orchestrator",
+          "deep-reflector",
+          "github-issue-fixer"
+        ],
         "commands": [],
-        "skills": ["skill-ai-workflow-orchestrator"]
+        "skills": [
+          "skill-ai-workflow-orchestrator"
+        ]
       }
     },
     "by_complexity": {
@@ -619,9 +1020,14 @@
         "skill-reviewer",
         "code-explorer",
         "code-architect",
-        "new"
+        "new",
+        "skill-agents-manager-development"
       ],
-      "high": ["architect", "fullstack-dev", "orchestrator"]
+      "high": [
+        "architect",
+        "fullstack-dev",
+        "orchestrator"
+      ]
     }
   }
 }

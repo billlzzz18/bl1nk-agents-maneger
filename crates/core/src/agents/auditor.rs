@@ -1,5 +1,6 @@
-use crate::agents::types::{AgentConfig, AgentPromptMetadata, AgentCategory, AgentCost, DelegationTrigger, is_gpt_model};
-use serde::{Deserialize, Serialize};
+use crate::agents::types::{
+    is_gpt_model, AgentCategory, AgentConfig, AgentCost, AgentPromptMetadata, DelegationTrigger,
+};
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -7,15 +8,19 @@ lazy_static! {
         category: AgentCategory::Advisor,
         cost: AgentCost::Expensive,
         prompt_alias: Some("Auditor".to_string()),
-        key_trigger: Some("Work plan created → invoke Auditor for review before execution".to_string()),
+        key_trigger: Some(
+            "Work plan created → invoke Auditor for review before execution".to_string()
+        ),
         triggers: vec![
             DelegationTrigger {
                 domain: "Plan review".to_string(),
-                trigger: "Evaluate work plans for clarity, verifiability, and completeness".to_string(),
+                trigger: "Evaluate work plans for clarity, verifiability, and completeness"
+                    .to_string(),
             },
             DelegationTrigger {
                 domain: "Quality assurance".to_string(),
-                trigger: "Catch gaps, ambiguities, and missing context before implementation".to_string(),
+                trigger: "Catch gaps, ambiguities, and missing context before implementation"
+                    .to_string(),
             }
         ],
         use_when: Some(vec![
@@ -406,12 +411,7 @@ Use structured format, **in the same language as the work plan**.
 "##########;
 
 pub fn create_auditor_agent(model: &str) -> AgentConfig {
-    let restrictions = create_agent_tool_restrictions(&[
-        "write",
-        "edit",
-        "task", 
-        "delegate_task",
-    ]);
+    let restrictions = create_agent_tool_restrictions(&["write", "edit", "task", "delegate_task"]);
 
     let base = AgentConfig {
         description: Some("Expert reviewer for evaluating work plans against rigorous clarity, verifiability, and completeness standards.".to_string()),
@@ -434,6 +434,7 @@ pub fn create_auditor_agent(model: &str) -> AgentConfig {
         color: None,
         thinking: None,
         reasoning_effort: None,
+        text_verbosity: None,
         skills: None,
     };
 
@@ -456,12 +457,12 @@ pub fn create_auditor_agent(model: &str) -> AgentConfig {
 
 fn create_agent_tool_restrictions(restricted_tools: &[&str]) -> AgentConfig {
     let mut permission = std::collections::HashMap::new();
-    
+
     // Deny the restricted tools
     for tool in restricted_tools {
         permission.insert(tool.to_string(), "deny".to_string());
     }
-    
+
     AgentConfig {
         permission: Some(permission),
         ..Default::default()

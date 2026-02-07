@@ -141,15 +141,20 @@ impl FileRpcLogger {
 
         if let Ok(entries) = fs::read_dir(parent_dir) {
             for entry in entries.flatten() {
-                if let Some(filename) = entry.file_name().to_str()
-                    && filename.starts_with("rpc-log-")
-                    && filename.ends_with(".log")
-                    && let Ok(metadata) = entry.metadata()
-                    && let Ok(modified) = metadata.modified()
-                    && let Ok(modified_secs) = modified.duration_since(std::time::UNIX_EPOCH)
-                    && modified_secs.as_secs() < cutoff_time
-                {
-                    let _ = fs::remove_file(entry.path());
+                if let Some(filename) = entry.file_name().to_str() {
+                    if filename.starts_with("rpc-log-") && filename.ends_with(".log") {
+                        if let Ok(metadata) = entry.metadata() {
+                            if let Ok(modified) = metadata.modified() {
+                                if let Ok(modified_secs) =
+                                    modified.duration_since(std::time::UNIX_EPOCH)
+                                {
+                                    if modified_secs.as_secs() < cutoff_time {
+                                        let _ = fs::remove_file(entry.path());
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -300,11 +305,9 @@ mod tests {
         assert_eq!(hash1.len(), 64);
 
         // Hash should be lowercase hex
-        assert!(
-            hash1
-                .chars()
-                .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
-        );
+        assert!(hash1
+            .chars()
+            .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
     }
 
     #[test]

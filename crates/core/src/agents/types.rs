@@ -30,6 +30,7 @@ pub struct AgentConfig {
     pub mode: Option<String>,
     pub thinking: Option<ThinkingConfig>,
     pub reasoning_effort: Option<String>,
+    pub text_verbosity: Option<String>, // Added for Auditor
     pub skills: Option<Vec<String>>,
 }
 
@@ -41,8 +42,12 @@ pub struct RateLimit {
     pub requests_per_day: u32,
 }
 
-fn default_rpm() -> u32 { 60 }
-fn default_rpd() -> u32 { 2000 }
+fn default_rpm() -> u32 {
+    60
+}
+fn default_rpd() -> u32 {
+    2000
+}
 
 impl Default for RateLimit {
     fn default() -> Self {
@@ -75,7 +80,7 @@ pub enum AgentCategory {
 }
 
 /// Cost classification for Tool Selection table
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum AgentCost {
     #[serde(rename = "FREE")]
     Free,
@@ -174,23 +179,6 @@ impl std::fmt::Display for BuiltinAgentName {
     }
 }
 
-impl ToString for BuiltinAgentName {
-    fn to_string(&self) -> String {
-        match self {
-            BuiltinAgentName::Orchestrator => "orchestrator".to_string(),
-            BuiltinAgentName::Planner => "planner".to_string(),
-            BuiltinAgentName::Consultant => "consultant".to_string(),
-            BuiltinAgentName::Expert => "expert".to_string(),
-            BuiltinAgentName::Researcher => "researcher".to_string(),
-            BuiltinAgentName::Explorer => "explorer".to_string(),
-            BuiltinAgentName::Observer => "observer".to_string(),
-            BuiltinAgentName::Auditor => "auditor".to_string(),
-            BuiltinAgentName::Manager => "manager".to_string(),
-            BuiltinAgentName::OrchestratorJunior => "orchestrator-junior".to_string(),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum OverridableAgentName {
@@ -215,15 +203,6 @@ impl std::fmt::Display for AgentName {
     }
 }
 
-impl ToString for AgentName {
-    fn to_string(&self) -> String {
-        match self {
-            AgentName::Builtin(b) => b.to_string(),
-            AgentName::Custom(s) => s.clone(),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentOverrideConfig {
     #[serde(flatten)]
@@ -233,10 +212,24 @@ pub struct AgentOverrideConfig {
     pub prompt_append: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub variant: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skills: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_p: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tools: Option<HashMap<String, bool>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disable: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider_options: Option<HashMap<String, serde_json::Value>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PartialAgentConfig {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub model: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -255,9 +248,11 @@ pub struct PartialAgentConfig {
     pub thinking: Option<ThinkingConfig>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reasoning_effort: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text_verbosity: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AgentOverrides {
     #[serde(flatten)]
     pub overrides: HashMap<String, AgentOverrideConfig>,
@@ -286,6 +281,7 @@ impl Default for AgentConfig {
             mode: None,
             thinking: None,
             reasoning_effort: None,
+            text_verbosity: None,
             skills: None,
         }
     }

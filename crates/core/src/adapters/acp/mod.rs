@@ -152,6 +152,9 @@ pub enum SessionUpdate {
     },
 }
 
+mod normalized;
+pub use normalized::*;
+
 impl SessionUpdate {
     pub fn get_server_name(&self) -> &Option<String> {
         match self {
@@ -405,12 +408,10 @@ mod tests {
         assert!(serialized.get("sessionUpdate").is_some());
         assert_eq!(serialized["sessionUpdate"], "agent_thought_chunk");
         assert_eq!(serialized["content"]["type"], "text");
-        assert!(
-            serialized["content"]["text"]
-                .as_str()
-                .unwrap()
-                .contains("Acknowledging the Greeting")
-        );
+        assert!(serialized["content"]["text"]
+            .as_str()
+            .unwrap()
+            .contains("Acknowledging the Greeting"));
     }
 
     #[test]

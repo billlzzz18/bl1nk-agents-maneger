@@ -1,13 +1,13 @@
-use crate::config::AgentConfig;
+use crate::agents::types::AgentConfig;
+use anyhow::{Context, Result};
 use std::collections::HashMap;
-use anyhow::{Result, Context};
 
 pub struct AgentRegistry {
     agents: HashMap<String, AgentConfig>,
     active_tasks: HashMap<String, TaskInfo>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)] // เพิ่ม PartialEq, Eq เพื่อให้ง่ายต่อการ assert ในเทสต์
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TaskInfo {
     pub task_id: String,
     pub agent_id: String,
@@ -15,7 +15,7 @@ pub struct TaskInfo {
     pub status: TaskStatus,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)] // เพิ่ม PartialEq, Eq เพื่อให้ง่ายต่อการ assert ในเทสต์
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TaskStatus {
     Pending,
     Running,
@@ -84,16 +84,15 @@ impl AgentRegistry {
 
     /// Remove completed/failed tasks (cleanup)
     pub fn cleanup_finished_tasks(&mut self) {
-        self.active_tasks.retain(|_, task| {
-            matches!(task.status, TaskStatus::Running | TaskStatus::Pending)
-        });
+        self.active_tasks
+            .retain(|_, task| matches!(task.status, TaskStatus::Running | TaskStatus::Pending));
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::RateLimit;
+    use crate::agents::types::RateLimit;
 
     fn create_test_agents() -> Vec<AgentConfig> {
         vec![
@@ -107,18 +106,43 @@ mod tests {
                 rate_limit: RateLimit::default(),
                 capabilities: vec!["cli-task".to_string()],
                 priority: 1,
+                enabled: true,
+                description: None,
+                model: None,
+                temperature: None,
+                max_tokens: None,
+                prompt: None,
+                color: None,
+                permission: None,
+                mode: None,
+                thinking: None,
+                reasoning_effort: None,
+                text_verbosity: None,
+                skills: None,
             },
-            // --- ส่วนที่เพิ่มเข้ามา: เพิ่ม Internal Agent ในชุดข้อมูลเทสต์ ---
             AgentConfig {
                 id: "internal-pmat".to_string(),
                 name: "Internal PMAT Agent".to_string(),
                 agent_type: "internal".to_string(),
-                command: Some("pmat-internal".to_string()), // command ยังคงมีประโยชน์ในการระบุตัวตน
+                command: Some("pmat-internal".to_string()),
                 args: None,
                 extension_name: None,
                 rate_limit: RateLimit::default(),
                 capabilities: vec!["code-analysis".to_string()],
-                priority: 10, // ให้ priority สูงกว่า
+                priority: 10,
+                enabled: true,
+                description: None,
+                model: None,
+                temperature: None,
+                max_tokens: None,
+                prompt: None,
+                color: None,
+                permission: None,
+                mode: None,
+                thinking: None,
+                reasoning_effort: None,
+                text_verbosity: None,
+                skills: None,
             },
         ]
     }
@@ -140,7 +164,6 @@ mod tests {
         let sorted_agents = registry.get_agents_by_priority();
 
         assert_eq!(sorted_agents.len(), 2);
-        // ตรวจสอบว่า agent ที่มี priority สูงกว่า (10) มาก่อน
         assert_eq!(sorted_agents[0].id, "internal-pmat");
         assert_eq!(sorted_agents[1].id, "cli-agent");
     }
@@ -177,12 +200,16 @@ mod tests {
         registry.register_task(task_info.clone());
         assert_eq!(registry.active_task_count(), 1);
 
-        registry.update_task_status("task-123", TaskStatus::Running).unwrap();
+        registry
+            .update_task_status("task-123", TaskStatus::Running)
+            .unwrap();
         let updated_task = registry.active_tasks.get("task-123").unwrap();
         assert_eq!(updated_task.status, TaskStatus::Running);
         assert_eq!(registry.active_task_count(), 1);
 
-        registry.update_task_status("task-123", TaskStatus::Completed).unwrap();
+        registry
+            .update_task_status("task-123", TaskStatus::Completed)
+            .unwrap();
         assert_eq!(registry.active_task_count(), 0);
 
         registry.cleanup_finished_tasks();

@@ -8,7 +8,6 @@ mod types;
 
 use concurrency::ConcurrencyManager;
 use tokio::time::sleep;
-use results::ResultHandlerContext;
 use state::TaskStateManager;
 use spawner::{create_task, resume_task, start_task as spawn_task, QueueItem, SpawnerContext};
 use types::{

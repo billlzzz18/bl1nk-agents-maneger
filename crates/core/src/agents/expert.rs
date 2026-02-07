@@ -1,5 +1,6 @@
-use crate::agents::types::{AgentConfig, AgentPromptMetadata, AgentCategory, AgentCost, DelegationTrigger, is_gpt_model};
-use serde::{Deserialize, Serialize};
+use crate::agents::types::{
+    is_gpt_model, AgentCategory, AgentConfig, AgentCost, AgentPromptMetadata, DelegationTrigger,
+};
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -108,12 +109,7 @@ Organize your final answer in three tiers:
 Your response goes directly to the user with no intermediate processing. Make your final message self-contained: a clear recommendation they can act on immediately, covering both what to do and why."####;
 
 pub fn create_expert_agent(model: &str) -> AgentConfig {
-    let restrictions = create_agent_tool_restrictions(&[
-        "write",
-        "edit",
-        "task", 
-        "delegate_task",
-    ]);
+    let restrictions = create_agent_tool_restrictions(&["write", "edit", "task", "delegate_task"]);
 
     let base = AgentConfig {
         description: Some("Read-only consultation agent. High-IQ reasoning specialist for debugging hard problems and high-difficulty architecture design.".to_string()),
@@ -136,6 +132,7 @@ pub fn create_expert_agent(model: &str) -> AgentConfig {
         color: None,
         thinking: None,
         reasoning_effort: None,
+        text_verbosity: None,
         skills: None,
     };
 
@@ -157,37 +154,39 @@ pub fn create_expert_agent(model: &str) -> AgentConfig {
 
 fn create_agent_tool_restrictions(restricted_tools: &[&str]) -> AgentConfig {
     let mut permission = std::collections::HashMap::new();
-    
+
     // Deny the restricted tools
     for tool in restricted_tools {
         permission.insert(tool.to_string(), "deny".to_string());
     }
-    
+
     AgentConfig {
         permission: Some(permission),
         ..Default::default()
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_oracle_prompt_metadata() {
+    fn test_expert_prompt_metadata() {
         // Test that the static metadata is properly initialized
-        assert_eq!(ORACLE_PROMPT_METADATA.category, AgentCategory::Advisor);
-        assert_eq!(ORACLE_PROMPT_METADATA.cost, AgentCost::Expensive);
-        assert_eq!(ORACLE_PROMPT_METADATA.prompt_alias, Some("Oracle".to_string()));
-        assert!(!ORACLE_PROMPT_METADATA.triggers.is_empty());
+        assert_eq!(EXPERT_PROMPT_METADATA.category, AgentCategory::Advisor);
+        assert_eq!(EXPERT_PROMPT_METADATA.cost, AgentCost::Expensive);
+        assert_eq!(
+            EXPERT_PROMPT_METADATA.prompt_alias,
+            Some("Expert".to_string())
+        );
+        assert!(!EXPERT_PROMPT_METADATA.triggers.is_empty());
     }
 
     #[test]
-    fn test_create_oracle_agent() {
+    fn test_create_expert_agent() {
         let model = "gpt-4";
-        let agent = create_oracle_agent(model);
-        
+        let agent = create_expert_agent(model);
+
         assert_eq!(agent.description, Some("Read-only consultation agent. High-IQ reasoning specialist for debugging hard problems and high-difficulty architecture design.".to_string()));
         assert_eq!(agent.mode, Some("subagent".to_string()));
         assert_eq!(agent.model, Some(model.to_string()));
@@ -197,20 +196,20 @@ mod tests {
     }
 
     #[test]
-    fn test_oracle_agent_gpt_model() {
+    fn test_expert_agent_gpt_model() {
         let model = "openai/gpt-4";
-        let agent = create_oracle_agent(model);
-        
+        let agent = create_expert_agent(model);
+
         // For GPT models, reasoningEffort should be set
         assert!(agent.reasoning_effort.is_some());
         assert_eq!(agent.reasoning_effort, Some("medium".to_string()));
     }
 
     #[test]
-    fn test_oracle_agent_non_gpt_model() {
+    fn test_expert_agent_non_gpt_model() {
         let model = "anthropic/claude-3";
-        let agent = create_oracle_agent(model);
-        
+        let agent = create_expert_agent(model);
+
         // For non-GPT models, thinking config should be set
         assert!(agent.thinking.is_some());
         assert_eq!(agent.thinking.unwrap().thinking_type, "enabled");

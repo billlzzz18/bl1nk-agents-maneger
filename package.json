@@ -6,6 +6,7 @@
   "scripts": {
     "build": "just build",
     "build-bundled": "just build-bundled",
+    "setup": "pnpm install && just build",
     "run": "just run",
     "dev": "just dev",
     "test": "just test",

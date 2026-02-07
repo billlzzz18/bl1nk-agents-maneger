@@ -10,7 +10,11 @@ path = "src/lib.rs"
 pmcp = { version = "1.8", features = ["schema-generation"] }
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde_json = { version = "1.0", features = ["preserve_order"] }
+tempfile = "3.8"
+pathdiff = "0.2"
+tempdir = "0.3"
+serial_test = "2.0"
 schemars = "1.0"
 anyhow = "1.0"
 thiserror = "1.0"
@@ -28,6 +32,7 @@ lazy_static = "1.4"
 log = "0.4"
 glob = "0.3"
 sha2 = "0.10"
+agent-client-protocol = "0.9.4"
 
 [features]
 default = ["schema-generation"]

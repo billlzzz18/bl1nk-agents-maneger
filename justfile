@@ -60,6 +60,21 @@ clippy:
     @echo "Running clippy linter..."
     cargo clippy --all-features -- -D warnings
 
+# Run full workflow checks (format, clippy, check, agents)
+verify:
+    @echo "Running full project workflow..."
+    python3 scripts/project_workflow.py all
+
+# Update auto-generated project map
+map:
+    @echo "Updating project map..."
+    python3 scripts/update_project_map.py
+
+# Audit skill registry against skills/ folders
+audit-skills:
+    @echo "Auditing skills registry..."
+    python3 scripts/project_workflow.py audit-skills
+
 # Validate agents metadata and files
 validate-agents:
     @python3 scripts/validate_agents.py

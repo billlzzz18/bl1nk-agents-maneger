@@ -109,7 +109,7 @@ pub mod error_codes {
     pub const METHOD_NOT_FOUND: i32 = -32601;
     pub const INVALID_PARAMS: i32 = -32602;
     pub const INTERNAL_ERROR: i32 = -32603;
-    
+
     // Custom error codes
     pub const RATE_LIMIT_EXCEEDED: i32 = -32000;
     pub const AGENT_NOT_FOUND: i32 = -32001;
@@ -142,9 +142,7 @@ impl JsonRpcResponse {
 
 impl Content {
     pub fn text<S: Into<String>>(text: S) -> Self {
-        Content::Text {
-            text: text.into(),
-        }
+        Content::Text { text: text.into() }
     }
 
     pub fn image<S: Into<String>>(data: S, mime_type: S) -> Self {
@@ -170,13 +168,23 @@ pub enum Part {
     #[serde(rename = "image")]
     Image { data: String, mime_type: String },
     #[serde(rename = "tool_use")]
-    ToolUse { id: String, name: String, input: Value },
+    ToolUse {
+        id: String,
+        name: String,
+        input: Value,
+    },
     #[serde(rename = "thinking")]
-    Thinking { thinking: String, signature: Option<String> },
+    Thinking {
+        thinking: String,
+        signature: Option<String>,
+    },
     #[serde(rename = "redacted_thinking")]
     RedactedThinking { data: String },
     #[serde(rename = "reasoning")]
-    Reasoning { reasoning: String, signature: Option<String> },
+    Reasoning {
+        reasoning: String,
+        signature: Option<String>,
+    },
 }
 
 #[cfg(test)]

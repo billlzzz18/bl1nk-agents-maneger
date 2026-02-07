@@ -1,4 +1,4 @@
-use crate::agents::{create_builtin_agents, AgentOverrides};
+use crate::agents::create_builtin_agents;
 use crate::config::OhMyOpenCodeConfig;
 use anyhow::{anyhow, Result};
 use serde_json::Value;

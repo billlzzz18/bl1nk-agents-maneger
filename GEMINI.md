@@ -1,13 +1,31 @@
 # 🤖 Bl1nk Agents Manager Extension
+## 📌 Project Status (Feb 7, 2026)
 
-**Version:** 0.2.0
-**Author:** billlzzz18 <team@bl1nk.site>
-**Extension ID:** `bl1nk-agents`
+Bl1nk Agents Manager is in active development and is not feature‑complete yet.
+This repo contains a working extension shell and a Rust core that is being
+brought to feature parity with existing TypeScript logic.
 
-This extension provides a powerful framework for managing and using specialized **System Agents** within the Gemini CLI. It allows users to switch between different personas (e.g., Software Architect, Code Generator, Creative Writer) by swapping the underlying system prompt.
+**What works now**
+- Extension manifest and Gemini CLI scaffolding are present.
+- Core Rust modules exist for agents, hooks, MCP/ACP, sessions, and RPC.
+- Command and documentation sets are present (currently being refreshed).
 
----
+**In progress**
+- TypeScript → Rust parity for large subsystems (background agents, config,
+  ACP normalization).
+- End‑to‑end session flows for Gemini/Codex/Qwen within a unified adapter.
+- Validation of hook behavior and task orchestration across agents.
 
+**Known gaps**
+- Some Rust modules compile but are not fully wired end‑to‑end.
+- Configuration loading/migration is still being aligned to actual runtime.
+- Authentication flows for some CLIs still require manual steps.
+
+**What to expect right now**
+- You can explore the architecture, commands, and agent catalogs.
+- Some workflows will still require manual setup or troubleshooting.
+
+For a complete non‑developer overview, see `docs/PROJECT_STATUS.md`.
 ## 🌟 What are System Agents?
 
 System Agents are specialized agent definitions that define how the Gemini CLI behaves. Instead of a generic assistant, you can load a specific persona with expert knowledge, unique speech patterns, or strict behavioral constraints.
@@ -95,6 +113,14 @@ This extension registers the `/system-agent` command namespace.
 | `/system-agent:switch` | Get instructions to switch agents | `/system-agent:switch <agent_id>` |
 | `/system-agent:examples` | Show example prompts for an agent | `/system-agent:examples <agent_id>` |
 | `/system-agent:new` | Interactive wizard to create a new agent | `/system-agent:new` |
+
+---
+
+## 📌 Gemini CLI Cheatsheet
+
+For day-to-day CLI usage and options, see the local cheatsheet:
+
+- `docs/GEMINI_CLI_CHEATSHEET.md`
 
 ---
 

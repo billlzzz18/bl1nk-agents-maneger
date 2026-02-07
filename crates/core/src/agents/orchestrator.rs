@@ -1,25 +1,23 @@
-use crate::agents::types::{AgentConfig, AgentCategory, AgentCost, DelegationTrigger, BuiltinAgentName};
 use crate::agents::prompt_builder::{
-    AvailableAgent, AvailableTool, AvailableSkill, AvailableCategory, 
-    build_key_triggers_section, build_tool_selection_table, build_explorer_section,
-    build_researcher_section, build_delegation_table, build_category_skills_delegation_guide,
-    build_expert_section, build_hard_blocks_section, build_anti_patterns_section,
-    categorize_tools
+    build_anti_patterns_section, build_category_skills_delegation_guide, build_delegation_table,
+    build_expert_section, build_explorer_section, build_hard_blocks_section,
+    build_key_triggers_section, build_researcher_section, categorize_tools, AvailableAgent,
+    AvailableCategory, AvailableSkill, AvailableTool,
 };
 use crate::agents::types::is_gpt_model;
-use serde::{Deserialize, Serialize};
+use crate::agents::types::AgentConfig;
 
 fn build_dynamic_orchestrator_prompt(
     available_agents: &[AvailableAgent],
-    available_tools: &[AvailableTool],
+    _available_tools: &[AvailableTool],
     available_skills: &[AvailableSkill],
     available_categories: &[AvailableCategory],
 ) -> String {
     let key_triggers = build_key_triggers_section(available_agents, available_skills);
-    let tool_selection = build_tool_selection_table(available_agents, available_tools, available_skills);
     let explorer_section = build_explorer_section(available_agents);
     let researcher_section = build_researcher_section(available_agents);
-    let category_skills_guide = build_category_skills_delegation_guide(available_categories, available_skills);
+    let category_skills_guide =
+        build_category_skills_delegation_guide(available_categories, available_skills);
     let delegation_table = build_delegation_table(available_agents);
     let expert_section = build_expert_section(available_agents);
     let hard_blocks = build_hard_blocks_section();
@@ -408,8 +406,14 @@ If the user's approach seems problematic:
 - When uncertain about scope, ask
 </Constraints>
 "####,
-        key_triggers, explorer_section, researcher_section, 
-        category_skills_guide, delegation_table, expert_section, hard_blocks, anti_patterns
+        key_triggers,
+        explorer_section,
+        researcher_section,
+        category_skills_guide,
+        delegation_table,
+        expert_section,
+        hard_blocks,
+        anti_patterns
     )
 }
 
@@ -425,10 +429,10 @@ pub fn create_orchestrator_agent(
     } else {
         vec![]
     };
-    
+
     let skills = available_skills.unwrap_or(&[]);
     let categories = available_categories.unwrap_or(&[]);
-    
+
     let prompt = if let Some(agents) = available_agents {
         build_dynamic_orchestrator_prompt(agents, &tools, skills, categories)
     } else {
@@ -441,7 +445,7 @@ pub fn create_orchestrator_agent(
         perms.insert("call_omo_agent".to_string(), "deny".to_string());
         perms
     };
-    
+
     let base = AgentConfig {
         description: Some("Orchestrator - Powerful AI orchestrator from OhMyOpenCode. Plans obsessively with todos, assesses search complexity before exploration, delegates strategically via category+skills combinations. Uses explorer for internal code (parallel-friendly), researcher for external docs.".to_string()),
         mode: Some("primary".to_string()),
@@ -463,6 +467,7 @@ pub fn create_orchestrator_agent(
         temperature: None,
         thinking: None,
         reasoning_effort: None,
+        text_verbosity: None,
         skills: None,
     };
 

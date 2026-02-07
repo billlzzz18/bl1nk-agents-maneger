@@ -1,5 +1,6 @@
-use crate::agents::types::{AgentConfig, AgentPromptMetadata, AgentCategory, AgentCost, DelegationTrigger};
-use serde::{Deserialize, Serialize};
+use crate::agents::types::{
+    AgentCategory, AgentConfig, AgentCost, AgentPromptMetadata, DelegationTrigger,
+};
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -8,12 +9,10 @@ lazy_static! {
         cost: AgentCost::Free,
         prompt_alias: Some("Explorer".to_string()),
         key_trigger: Some("2+ modules involved → fire `explorer` background".to_string()),
-        triggers: vec![
-            DelegationTrigger {
-                domain: "Explorer".to_string(),
-                trigger: "Find existing codebase structure, patterns and styles".to_string(),
-            }
-        ],
+        triggers: vec![DelegationTrigger {
+            domain: "Explorer".to_string(),
+            trigger: "Find existing codebase structure, patterns and styles".to_string(),
+        }],
         use_when: Some(vec![
             "Multiple search angles needed".to_string(),
             "Unfamiliar module structure".to_string(),
@@ -34,7 +33,7 @@ pub fn create_explorer_agent(model: &str) -> AgentConfig {
     let restrictions = create_agent_tool_restrictions(&[
         "write",
         "edit",
-        "task", 
+        "task",
         "delegate_task",
         "call_ome_agent",
     ]);
@@ -61,18 +60,19 @@ pub fn create_explorer_agent(model: &str) -> AgentConfig {
         thinking: None,
         reasoning_effort: None,
         skills: None,
+        text_verbosity: None,
     }
 }
 
 fn create_agent_tool_restrictions(restricted_tools: &[&str]) -> AgentConfig {
     // This is a simplified implementation - in a real system, this would be more complex
     let mut permission = std::collections::HashMap::new();
-    
+
     // Deny the restricted tools
     for tool in restricted_tools {
         permission.insert(tool.to_string(), "deny".to_string());
     }
-    
+
     AgentConfig {
         permission: Some(permission),
         ..Default::default()

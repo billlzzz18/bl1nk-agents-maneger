@@ -1,5 +1,4 @@
-use crate::agents::types::{AgentConfig, AgentPromptMetadata, AgentCategory, AgentCost, DelegationTrigger};
-use serde::{Deserialize, Serialize};
+use crate::agents::types::{AgentCategory, AgentConfig, AgentCost, AgentPromptMetadata};
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -1192,12 +1191,7 @@ This will:
 "####;
 
 pub fn create_planner_agent(model: &str) -> AgentConfig {
-    let restrictions = create_agent_tool_restrictions(&[
-        "write",
-        "edit",
-        "task", 
-        "delegate_task",
-    ]);
+    let restrictions = create_agent_tool_restrictions(&["write", "edit", "task", "delegate_task"]);
 
     AgentConfig {
         description: Some("Strategic planning consultant that creates work plans for complex tasks. Named after the Titan who brought fire to humanity, bringing foresight and structure to complex work.".to_string()),
@@ -1224,17 +1218,18 @@ pub fn create_planner_agent(model: &str) -> AgentConfig {
         }),
         reasoning_effort: None,
         skills: None,
+        text_verbosity: None,
     }
 }
 
 fn create_agent_tool_restrictions(restricted_tools: &[&str]) -> AgentConfig {
     let mut permission = std::collections::HashMap::new();
-    
+
     // Deny the restricted tools
     for tool in restricted_tools {
         permission.insert(tool.to_string(), "deny".to_string());
     }
-    
+
     AgentConfig {
         permission: Some(permission),
         ..Default::default()

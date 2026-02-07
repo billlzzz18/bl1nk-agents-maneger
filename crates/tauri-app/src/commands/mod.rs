@@ -1,8 +1,8 @@
 use crate::state::AppState;
-use backend::{
+use bl1nk_core::{
     DetailedConversation, DirEntry, EnrichedProject, FileContent, GeminiAuthConfig, GitInfo,
-    LLxprtConfig, ProcessStatus, ProjectsResponse, QwenConfig, RecentChat, SearchFilters,
-    SearchResult,
+    GeminiCommand, LLxprtConfig, ProcessStatus, ProjectsResponse, QwenConfig, RecentChat,
+    SearchFilters, SearchResult,
 };
 use serde_json::Value;
 use tauri::{AppHandle, State};
@@ -157,6 +157,16 @@ pub async fn execute_confirmed_command(
 }
 
 #[tauri::command]
+pub async fn approve_oauth(approved: bool, state: State<'_, AppState>) -> Result<bool, String> {
+    if approved {
+        state.backend.approve_oauth();
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
+#[tauri::command]
 pub async fn generate_conversation_title(
     message: String,
     model: Option<String>,
@@ -238,6 +248,18 @@ pub async fn list_volumes(state: State<'_, AppState>) -> Result<Vec<DirEntry>, S
     state
         .backend
         .list_volumes()
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+
+#[tauri::command]
+pub async fn list_gemini_commands(
+    working_directory: String,
+    state: State<'_, AppState>,
+) -> Result<Vec<GeminiCommand>, String> {
+    state
+        .backend
+        .list_gemini_commands(working_directory)
         .await
         .map_err(|e| format!("{e:#}"))
 }

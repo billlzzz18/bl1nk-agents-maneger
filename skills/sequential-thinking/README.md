@@ -1,118 +1,38 @@
-# Sequential Thinking Skill
+# skills/sequential-thinking
+## 📌 Project Status (Feb 7, 2026)
 
-Agent skill for systematic problem-solving through iterative reasoning with revision and branching capabilities.
+Bl1nk Agents Manager is in active development and is not feature‑complete yet.
+This repo contains a working extension shell and a Rust core that is being
+brought to feature parity with existing TypeScript logic.
 
-## What This Skill Does
+**What works now**
+- Extension manifest and Gemini CLI scaffolding are present.
+- Core Rust modules exist for agents, hooks, MCP/ACP, sessions, and RPC.
+- Command and documentation sets are present (currently being refreshed).
 
-Enables Claude to break down complex problems into sequential thought steps, revise conclusions when needed, and explore alternative solution paths—all while maintaining context throughout the reasoning process.
+**In progress**
+- TypeScript → Rust parity for large subsystems (background agents, config,
+  ACP normalization).
+- End‑to‑end session flows for Gemini/Codex/Qwen within a unified adapter.
+- Validation of hook behavior and task orchestration across agents.
 
-## Installation
+**Known gaps**
+- Some Rust modules compile but are not fully wired end‑to‑end.
+- Configuration loading/migration is still being aligned to actual runtime.
+- Authentication flows for some CLIs still require manual steps.
 
-This skill requires the Sequential Thinking MCP server to be installed and configured in your Claude Desktop or Claude Code environment.
+**What to expect right now**
+- You can explore the architecture, commands, and agent catalogs.
+- Some workflows will still require manual setup or troubleshooting.
 
-### Step 1: Install MCP Server
+For a complete non‑developer overview, see `docs/PROJECT_STATUS.md`.
 
-Choose one of the following methods:
+Skill directory with SKILL.md and optional resources.
 
-#### NPX (Recommended)
+## Key Files
 
-Add to your `claude_desktop_config.json` or MCP settings:
+- `SKILL.md`
 
-```json
-{
-  "mcpServers": {
-    "sequential-thinking": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
-    }
-  }
-}
-```
+## Key Subdirectories
 
-#### Docker
-
-```json
-{
-  "mcpServers": {
-    "sequentialthinking": {
-      "command": "docker",
-      "args": ["run", "--rm", "-i", "mcp/sequentialthinking"]
-    }
-  }
-}
-```
-
-### Step 2: Add Skill to Project
-
-Copy this skill folder to your project's `.claude/skills/` directory:
-
-```bash
-cp -r sequential-thinking /path/to/your/project/.claude/skills/
-```
-
-### Step 3: Verify Installation
-
-Restart Claude and check that the `mcp__reasoning__sequentialthinking` tool is available.
-
-## Usage
-
-Once installed, Claude will automatically use this skill when:
-- Facing complex multi-step problems
-- Needing to revise earlier conclusions
-- Exploring alternative solution approaches
-- Working through uncertain or evolving scopes
-
-You can also explicitly request it:
-```
-"Let's think through this step-by-step using sequential thinking"
-```
-
-## Configuration
-
-### Disable Logging (Optional)
-
-To suppress thought information logging, set environment variable:
-
-```json
-{
-  "mcpServers": {
-    "sequential-thinking": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
-      "env": {
-        "DISABLE_THOUGHT_LOGGING": "true"
-      }
-    }
-  }
-}
-```
-
-## Skill Structure
-
-```
-sequential-thinking/
-├── SKILL.md              # Main skill definition
-├── README.md             # This file
-└── references/
-    ├── advanced.md       # Revision and branching patterns
-    └── examples.md       # Real-world use cases
-```
-
-## When Claude Uses This Skill
-
-The skill activates for:
-- **Complex analysis**: Breaking down multi-faceted problems
-- **Design decisions**: Exploring and comparing alternatives
-- **Debugging**: Systematic investigation with course correction
-- **Planning**: Multi-stage project planning with evolving scope
-- **Architecture**: Evaluating trade-offs across approaches
-
-## Learn More
-
-- [MCP Sequential Thinking Server](https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking)
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-- [Agent Skills Documentation](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview.md)
-
-## License
-
-MIT
+- `references/`

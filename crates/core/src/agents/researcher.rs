@@ -1,8 +1,9 @@
-use crate::agents::types::{AgentConfig, AgentPromptMetadata, AgentCategory, AgentCost, DelegationTrigger};
-use serde::{Deserialize, Serialize};
-use lazy_static::lazy_static;
+use crate::agents::types::{
+    is_gpt_model, AgentCategory, AgentConfig, AgentCost, AgentPromptMetadata, DelegationTrigger,
+};
 use chrono;
 use chrono::Datelike;
+use lazy_static::lazy_static;
 
 lazy_static! {
     pub static ref RESEARCHER_PROMPT_METADATA: AgentPromptMetadata = AgentPromptMetadata {
@@ -29,16 +30,15 @@ lazy_static! {
 }
 
 pub fn create_researcher_agent(model: &str) -> AgentConfig {
-    // In Rust, we'll create a simplified version of tool restrictions
     let restrictions = create_agent_tool_restrictions(&[
         "write",
         "edit",
-        "task", 
+        "task",
         "delegate_task",
         "call_omo_agent",
     ]);
 
-    AgentConfig {
+    let base = AgentConfig {
         description: Some("Specialized codebase understanding agent for multi-repository analysis, searching remote codebases, retrieving official documentation, and finding implementation examples using GitHub CLI, Context7, and Web Search. MUST BE USED when users ask to look up code in remote repositories, explain library internals, or find usage examples in open source.".to_string()),
         mode: Some("subagent".to_string()),
         model: Some(model.to_string()),
@@ -59,19 +59,33 @@ pub fn create_researcher_agent(model: &str) -> AgentConfig {
         color: None,
         thinking: None,
         reasoning_effort: None,
+        text_verbosity: None,
         skills: None,
+    };
+
+    if is_gpt_model(model) {
+        AgentConfig {
+            reasoning_effort: Some("medium".to_string()),
+            ..base
+        }
+    } else {
+        AgentConfig {
+            thinking: Some(crate::agents::types::ThinkingConfig {
+                thinking_type: "enabled".to_string(),
+                budget_tokens: Some(32000),
+            }),
+            ..base
+        }
     }
 }
 
 fn create_agent_tool_restrictions(restricted_tools: &[&str]) -> AgentConfig {
-    // This is a simplified implementation - in a real system, this would be more complex
     let mut permission = std::collections::HashMap::new();
-    
-    // Deny the restricted tools
+
     for tool in restricted_tools {
         permission.insert(tool.to_string(), "deny".to_string());
     }
-    
+
     AgentConfig {
         permission: Some(permission),
         ..Default::default()
@@ -81,8 +95,9 @@ fn create_agent_tool_restrictions(restricted_tools: &[&str]) -> AgentConfig {
 fn get_researcher_prompt() -> String {
     let current_year = chrono::Utc::now().year();
     let prev_year = current_year - 1;
-    
-    format!(r####"#### THE RESEARCHER
+
+    format!(
+        r####"#### THE RESEARCHER
 
 You are **THE RESEARCHER**, a specialized open-source codebase understanding agent.
 
@@ -260,10 +275,10 @@ Every claim MUST include a permalink:
 **Claim**: [What you're asserting]
 
 **Evidence** ([source](https://github.com/owner/repo/blob/<sha>/path#L10-L20)):
-\\`\\`\\`typescript
+\`\`\`typescript
 // The actual code
 function example() {{ ... }}
-\\`\\`\\`
+\`\`\`
 
 **Explanation**: This works because [specific reason from the code].
 ```
@@ -365,9 +380,11 @@ grep_app_searchGitHub(query: "useQuery")
 3. **ALWAYS CITE**: Every code claim needs a permalink
 4. **USE MARKDOWN**: Code blocks with language identifiers
 5. **BE CONCISE**: Facts > opinions, evidence > speculation
-"####, current_year=current_year, prev_year=prev_year)
+"####,
+        current_year = current_year,
+        prev_year = prev_year
+    )
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -376,9 +393,15 @@ mod tests {
     #[test]
     fn test_researcher_prompt_metadata() {
         // Test that the static metadata is properly initialized
-        assert_eq!(RESEARCHER_PROMPT_METADATA.category, AgentCategory::Exploration);
+        assert_eq!(
+            RESEARCHER_PROMPT_METADATA.category,
+            AgentCategory::Exploration
+        );
         assert_eq!(RESEARCHER_PROMPT_METADATA.cost, AgentCost::Cheap);
-        assert_eq!(RESEARCHER_PROMPT_METADATA.prompt_alias, Some("Researcher".to_string()));
+        assert_eq!(
+            RESEARCHER_PROMPT_METADATA.prompt_alias,
+            Some("Researcher".to_string())
+        );
         assert!(!RESEARCHER_PROMPT_METADATA.triggers.is_empty());
     }
 
@@ -386,7 +409,7 @@ mod tests {
     fn test_create_researcher_agent() {
         let model = "gpt-4";
         let agent = create_researcher_agent(model);
-        
+
         assert!(agent.description.is_some());
         assert_eq!(agent.mode, Some("subagent".to_string()));
         assert_eq!(agent.model, Some(model.to_string()));
@@ -399,17 +422,19 @@ mod tests {
     fn test_researcher_agent_gpt_model() {
         let model = "openai/gpt-4";
         let agent = create_researcher_agent(model);
-        
-        // For GPT models, reasoningEffort should be set
+
+        // For GPT models, reasoning_effort should be set
         assert!(agent.reasoning_effort.is_some());
+        assert_eq!(agent.reasoning_effort, Some("medium".to_string()));
     }
 
     #[test]
     fn test_researcher_agent_non_gpt_model() {
         let model = "anthropic/claude-3";
         let agent = create_researcher_agent(model);
-        
+
         // For non-GPT models, thinking config should be set
         assert!(agent.thinking.is_some());
+        assert_eq!(agent.thinking.as_ref().unwrap().thinking_type, "enabled");
     }
 }

@@ -139,6 +139,12 @@ pub struct CommandResult {
     pub error: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RequestToolCallConfirmationResult {
+    pub id: String,
+    pub outcome: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

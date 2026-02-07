@@ -130,7 +130,9 @@ fn generate_enhanced_chat_info(
                     if let Some(params) = json.get("params") {
                         if let Some(prompt) = params.get("prompt").and_then(|p| p.as_array()) {
                             for content_block in prompt {
-                                if let Some(text) = content_block.get("text").and_then(|t| t.as_str()) {
+                                if let Some(text) =
+                                    content_block.get("text").and_then(|t| t.as_str())
+                                {
                                     title = if text.chars().count() > 50 {
                                         format!("{}...", text.chars().take(50).collect::<String>())
                                     } else {
@@ -171,39 +173,39 @@ fn generate_enhanced_chat_info(
                     match method {
                         "session/prompt" => {
                             _message_count += 1;
-                                if let Some(params) = json.get("params") {
-                                    if let Some(prompt) =
-                                        params.get("prompt").and_then(|p| p.as_array())
-                                    {
-                                        for content_block in prompt {
-                                            if let Some(text) =
-                                                content_block.get("text").and_then(|t| t.as_str())
-                                            {
-                                                if text.chars().count() > 20 {
-                                                    summary_parts.push(format!(
-                                                        "User: {}...",
-                                                        text.chars().take(20).collect::<String>()
-                                                    ));
-                                                } else {
-                                                    summary_parts.push(format!("User: {}", text));
-                                                }
+                            if let Some(params) = json.get("params") {
+                                if let Some(prompt) =
+                                    params.get("prompt").and_then(|p| p.as_array())
+                                {
+                                    for content_block in prompt {
+                                        if let Some(text) =
+                                            content_block.get("text").and_then(|t| t.as_str())
+                                        {
+                                            if text.chars().count() > 20 {
+                                                summary_parts.push(format!(
+                                                    "User: {}...",
+                                                    text.chars().take(20).collect::<String>()
+                                                ));
+                                            } else {
+                                                summary_parts.push(format!("User: {}", text));
                                             }
+                                        }
                                     }
                                 }
                             }
                         }
                         "agent_message_chunk" => {
-                                if let Some(params) = json.get("params") {
-                                    if let Some(text) = params.get("chunk").and_then(|c| c.as_str()) {
-                                        if text.chars().count() > 20 && !summary_parts.is_empty() {
-                                            summary_parts.push(format!(
-                                                "AI: {}...",
-                                                text.chars().take(20).collect::<String>()
-                                            ));
-                                        }
+                            if let Some(params) = json.get("params") {
+                                if let Some(text) = params.get("chunk").and_then(|c| c.as_str()) {
+                                    if text.chars().count() > 20 && !summary_parts.is_empty() {
+                                        summary_parts.push(format!(
+                                            "AI: {}...",
+                                            text.chars().take(20).collect::<String>()
+                                        ));
                                     }
                                 }
                             }
+                        }
                         _ => {}
                     }
                 }
@@ -274,7 +276,8 @@ pub async fn get_recent_chats() -> Result<Vec<RecentChat>> {
                     let project_hash = project.file_name().to_string_lossy().to_string();
 
                     // Only process valid 64-character hexadecimal project directories
-                    if project_hash.len() != 64 || !project_hash.chars().all(|c| c.is_ascii_hexdigit())
+                    if project_hash.len() != 64
+                        || !project_hash.chars().all(|c| c.is_ascii_hexdigit())
                     {
                         continue;
                     }
@@ -283,7 +286,8 @@ pub async fn get_recent_chats() -> Result<Vec<RecentChat>> {
                         for log_entry in logs.flatten() {
                             let filename = log_entry.file_name().to_string_lossy().to_string();
                             if filename.starts_with("rpc-log-") && filename.ends_with(".log") {
-                                if let Some(timestamp_ms) = parse_timestamp_from_filename(&filename) {
+                                if let Some(timestamp_ms) = parse_timestamp_from_filename(&filename)
+                                {
                                     let log_path = log_entry.path();
                                     let _title = generate_title_from_messages(&log_path);
                                     let message_count = count_messages_in_log(&log_path);
@@ -293,8 +297,13 @@ pub async fn get_recent_chats() -> Result<Vec<RecentChat>> {
                                             + std::time::Duration::from_millis(timestamp_ms),
                                     );
 
-                                    let (enhanced_title, summary, tags, _tool_calls_count, last_activity) =
-                                        generate_enhanced_chat_info(&log_path);
+                                    let (
+                                        enhanced_title,
+                                        summary,
+                                        tags,
+                                        _tool_calls_count,
+                                        last_activity,
+                                    ) = generate_enhanced_chat_info(&log_path);
 
                                     all_chats.push(RecentChat {
                                         id: format!("{project_hash}/{filename}"),
@@ -356,7 +365,8 @@ pub async fn search_chats(
                     let project_hash = project.file_name().to_string_lossy().to_string();
 
                     // Only process valid 64-character hexadecimal project directories
-                    if project_hash.len() != 64 || !project_hash.chars().all(|c| c.is_ascii_hexdigit())
+                    if project_hash.len() != 64
+                        || !project_hash.chars().all(|c| c.is_ascii_hexdigit())
                     {
                         continue;
                     }
@@ -373,89 +383,103 @@ pub async fn search_chats(
                         for log_entry in logs.flatten() {
                             let filename = log_entry.file_name().to_string_lossy().to_string();
                             if filename.starts_with("rpc-log-") && filename.ends_with(".log") {
-                                if let Some(timestamp_ms) = parse_timestamp_from_filename(&filename) {
+                                if let Some(timestamp_ms) = parse_timestamp_from_filename(&filename)
+                                {
                                     let log_path = log_entry.path();
-                            let mut matches = Vec::new();
+                                    let mut matches = Vec::new();
 
-                            if let Ok(file) = File::open(&log_path) {
-                                let reader = BufReader::new(file);
-                                let lines: Vec<String> =
-                                    reader.lines().map_while(Result::ok).collect();
+                                    if let Ok(file) = File::open(&log_path) {
+                                        let reader = BufReader::new(file);
+                                        let lines: Vec<String> =
+                                            reader.lines().map_while(Result::ok).collect();
 
-                                for (i, line) in lines.iter().enumerate() {
-                                    // Extract timestamp prefix if present [ISO]
-                                    let line_ts = if line.starts_with('[') {
-                                        if let Some(end) = line.find(']') {
-                                            line[1..end].to_string()
-                                        } else {
-                                            String::new()
-                                        }
-                                    } else {
-                                        String::new()
-                                    };
+                                        for (i, line) in lines.iter().enumerate() {
+                                            // Extract timestamp prefix if present [ISO]
+                                            let line_ts = if line.starts_with('[') {
+                                                if let Some(end) = line.find(']') {
+                                                    line[1..end].to_string()
+                                                } else {
+                                                    String::new()
+                                                }
+                                            } else {
+                                                String::new()
+                                            };
 
-                                    // JSON part
-                                    let json_start = line.find('{');
-                                    let mut matched = false;
-                                    // Track whether this line was parsed as JSON successfully.
-                                    // If it was, we will not fall back to raw-line matching to avoid
-                                    // surfacing internal JSON-RPC payloads in search results.
-                                    let mut parsed_json = false;
-                                    if let Some(start) = json_start {
-                                        if let Ok(json) = serde_json::from_str::<serde_json::Value>(
-                                            &line[start..],
-                                        ) {
-                                        parsed_json = true;
-                                        // Default timestamp if line prefix missing
-                                        let ts = if !line_ts.is_empty() {
-                                            line_ts.clone()
-                                        } else {
-                                            // Fallback to file-based timestamp
-                                            let dt = DateTime::<Local>::from(
-                                                std::time::UNIX_EPOCH
-                                                    + std::time::Duration::from_millis(
-                                                        timestamp_ms,
-                                                    ),
-                                            );
-                                            dt.to_rfc3339()
-                                        };
+                                            // JSON part
+                                            let json_start = line.find('{');
+                                            let mut matched = false;
+                                            // Track whether this line was parsed as JSON successfully.
+                                            // If it was, we will not fall back to raw-line matching to avoid
+                                            // surfacing internal JSON-RPC payloads in search results.
+                                            let mut parsed_json = false;
+                                            if let Some(start) = json_start {
+                                                if let Ok(json) =
+                                                    serde_json::from_str::<serde_json::Value>(
+                                                        &line[start..],
+                                                    )
+                                                {
+                                                    parsed_json = true;
+                                                    // Default timestamp if line prefix missing
+                                                    let ts = if !line_ts.is_empty() {
+                                                        line_ts.clone()
+                                                    } else {
+                                                        // Fallback to file-based timestamp
+                                                        let dt = DateTime::<Local>::from(
+                                                            std::time::UNIX_EPOCH
+                                                                + std::time::Duration::from_millis(
+                                                                    timestamp_ms,
+                                                                ),
+                                                        );
+                                                        dt.to_rfc3339()
+                                                    };
 
-                                        if let Some(method) =
-                                            json.get("method").and_then(|m| m.as_str())
-                                        {
-                                            match method {
-                                                "session/prompt" => {
-                                                    if let Some(params) = json.get("params") {
-                                                        if let Some(prompt) = params
-                                                            .get("prompt")
-                                                            .and_then(|p| p.as_array())
-                                                        {
-                                                            for content_block in prompt {
-                                                                if let Some(text) = content_block
-                                                                    .get("text")
-                                                                    .and_then(|t| t.as_str())
+                                                    if let Some(method) =
+                                                        json.get("method").and_then(|m| m.as_str())
+                                                    {
+                                                        match method {
+                                                            "session/prompt" => {
+                                                                if let Some(params) =
+                                                                    json.get("params")
                                                                 {
-                                                                    let hay = if case_sensitive {
+                                                                    if let Some(prompt) = params
+                                                                        .get("prompt")
+                                                                        .and_then(|p| p.as_array())
+                                                                    {
+                                                                        for content_block in prompt
+                                                                        {
+                                                                            if let Some(text) =
+                                                                                content_block
+                                                                                    .get("text")
+                                                                                    .and_then(|t| {
+                                                                                        t.as_str()
+                                                                                    })
+                                                                            {
+                                                                                let hay = if case_sensitive {
                                                                         text.to_string()
                                                                     } else {
                                                                         text.to_lowercase()
                                                                     };
-                                                                    let needle = if case_sensitive {
+                                                                                let needle = if case_sensitive {
                                                                         query.clone()
                                                                     } else {
                                                                         query_lower.clone()
                                                                     };
-                                                                    if hay.contains(&needle) {
-                                                                        let snippet =
-                                                                            if text.len() > 200 {
-                                                                                format!(
+                                                                                if hay.contains(
+                                                                                    &needle,
+                                                                                ) {
+                                                                                    let snippet =
+                                                                                        if text
+                                                                                            .len()
+                                                                                            > 200
+                                                                                        {
+                                                                                            format!(
                                                                                     "{}...",
                                                                                     &text[..200]
                                                                                 )
-                                                                            } else {
-                                                                                text.to_string()
-                                                                            };
-                                                                        matches.push(MessageMatch {
+                                                                                        } else {
+                                                                                            text.to_string()
+                                                                                        };
+                                                                                    matches.push(MessageMatch {
                                                                             content_snippet: snippet,
                                                                             line_number: (i + 1) as u32,
                                                                             context_before: None,
@@ -463,57 +487,84 @@ pub async fn search_chats(
                                                                             role: "user".to_string(),
                                                                             timestamp_iso: ts.clone(),
                                                                         });
-                                                                        matched = true;
+                                                                                    matched = true;
+                                                                                }
+                                                                            }
+                                                                        }
                                                                     }
                                                                 }
                                                             }
-                                                        }
-                                                    }
-                                                }
-                                                "agent_message_chunk" => {
-                                                    if let Some(params) = json.get("params") {
-                                                        if let Some(chunk) = params
-                                                            .get("chunk")
-                                                            .and_then(|c| c.as_str())
-                                                        {
-                                                            let hay = if case_sensitive {
-                                                                chunk.to_string()
-                                                            } else {
-                                                                chunk.to_lowercase()
-                                                            };
-                                                            let needle = if case_sensitive {
-                                                                query.clone()
-                                                            } else {
-                                                                query_lower.clone()
-                                                            };
-                                                            if hay.contains(&needle) {
-                                                                let snippet = if chunk.len() > 200 {
-                                                                    format!("{}...", &chunk[..200])
-                                                                } else {
-                                                                    chunk.to_string()
-                                                                };
-                                                                matches.push(MessageMatch {
-                                                                    content_snippet: snippet,
-                                                                    line_number: (i + 1) as u32,
-                                                                    context_before: None,
-                                                                    context_after: None,
-                                                                    role: "assistant".to_string(),
-                                                                    timestamp_iso: ts.clone(),
-                                                                });
-                                                                matched = true;
+                                                            "agent_message_chunk" => {
+                                                                if let Some(params) =
+                                                                    json.get("params")
+                                                                {
+                                                                    if let Some(chunk) = params
+                                                                        .get("chunk")
+                                                                        .and_then(|c| c.as_str())
+                                                                    {
+                                                                        let hay = if case_sensitive
+                                                                        {
+                                                                            chunk.to_string()
+                                                                        } else {
+                                                                            chunk.to_lowercase()
+                                                                        };
+                                                                        let needle =
+                                                                            if case_sensitive {
+                                                                                query.clone()
+                                                                            } else {
+                                                                                query_lower.clone()
+                                                                            };
+                                                                        if hay.contains(&needle) {
+                                                                            let snippet = if chunk
+                                                                                .len()
+                                                                                > 200
+                                                                            {
+                                                                                format!(
+                                                                                    "{}...",
+                                                                                    &chunk[..200]
+                                                                                )
+                                                                            } else {
+                                                                                chunk.to_string()
+                                                                            };
+                                                                            matches
+                                                                                .push(MessageMatch {
+                                                                                content_snippet:
+                                                                                    snippet,
+                                                                                line_number: (i + 1)
+                                                                                    as u32,
+                                                                                context_before:
+                                                                                    None,
+                                                                                context_after: None,
+                                                                                role: "assistant"
+                                                                                    .to_string(),
+                                                                                timestamp_iso: ts
+                                                                                    .clone(),
+                                                                            });
+                                                                            matched = true;
+                                                                        }
+                                                                    }
+                                                                }
                                                             }
-                                                        }
-                                                    }
-                                                }
-                                                "session/update" => {
-                                                    if let Some(params) = json.get("params") {
-                                                        if let Some(update) = params.get("update") {
-                                                            if let Some(session_update) = update
-                                                                .get("sessionUpdate")
-                                                                .and_then(|s| s.as_str())
-                                                            {
-                                                                if let Some(content) = update.get("content") {
-                                                                    if let Some(text) = content
+                                                            "session/update" => {
+                                                                if let Some(params) =
+                                                                    json.get("params")
+                                                                {
+                                                                    if let Some(update) =
+                                                                        params.get("update")
+                                                                    {
+                                                                        if let Some(
+                                                                            session_update,
+                                                                        ) = update
+                                                                            .get("sessionUpdate")
+                                                                            .and_then(|s| {
+                                                                                s.as_str()
+                                                                            })
+                                                                        {
+                                                                            if let Some(content) =
+                                                                                update
+                                                                                    .get("content")
+                                                                            {
+                                                                                if let Some(text) = content
                                                                         .get("text")
                                                                         .and_then(|t| t.as_str())
                                                                     {
@@ -551,35 +602,47 @@ pub async fn search_chats(
                                                                             }
                                                                         }
                                                                     }
+                                                                            }
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
-                                                        }
-                                                    }
-                                                }
-                                                "agent_thought_chunk" => {
-                                                    if include_thinking {
-                                                        if let Some(params) = json.get("params") {
-                                                            if let Some(chunk) = params
-                                                                .get("chunk")
-                                                                .and_then(|c| c.as_str())
-                                                            {
-                                                                let hay = if case_sensitive {
-                                                                    chunk.to_string()
-                                                                } else {
-                                                                    chunk.to_lowercase()
-                                                                };
-                                                                let needle = if case_sensitive {
-                                                                    query.clone()
-                                                                } else {
-                                                                    query_lower.clone()
-                                                                };
-                                                                if hay.contains(&needle) {
-                                                                    let snippet = if chunk.len() > 200 {
-                                                                        format!("{}...", &chunk[..200])
-                                                                    } else {
-                                                                        chunk.to_string()
-                                                                    };
-                                                                    matches.push(MessageMatch {
+                                                            "agent_thought_chunk" => {
+                                                                if include_thinking {
+                                                                    if let Some(params) =
+                                                                        json.get("params")
+                                                                    {
+                                                                        if let Some(chunk) = params
+                                                                            .get("chunk")
+                                                                            .and_then(|c| {
+                                                                                c.as_str()
+                                                                            })
+                                                                        {
+                                                                            let hay =
+                                                                                if case_sensitive {
+                                                                                    chunk
+                                                                                        .to_string()
+                                                                                } else {
+                                                                                    chunk.to_lowercase()
+                                                                                };
+                                                                            let needle =
+                                                                                if case_sensitive {
+                                                                                    query.clone()
+                                                                                } else {
+                                                                                    query_lower
+                                                                                        .clone()
+                                                                                };
+                                                                            if hay.contains(&needle)
+                                                                            {
+                                                                                let snippet =
+                                                                                    if chunk.len()
+                                                                                        > 200
+                                                                                    {
+                                                                                        format!("{}...", &chunk[..200])
+                                                                                    } else {
+                                                                                        chunk.to_string()
+                                                                                    };
+                                                                                matches.push(MessageMatch {
                                                                         content_snippet: snippet,
                                                                         line_number: (i + 1) as u32,
                                                                         context_before: None,
@@ -587,101 +650,101 @@ pub async fn search_chats(
                                                                         role: "assistant".to_string(),
                                                                         timestamp_iso: ts.clone(),
                                                                     });
-                                                                    matched = true;
+                                                                                matched = true;
+                                                                            }
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
+                                                            _ => {}
                                                         }
                                                     }
                                                 }
-                                                _ => {}
+                                            }
+
+                                            // Fallback to raw line matching ONLY when the line is not JSON.
+                                            // This prevents raw JSON-RPC logs from appearing in results.
+                                            if !matched && !parsed_json {
+                                                let hay = if case_sensitive {
+                                                    line.clone()
+                                                } else {
+                                                    line.to_lowercase()
+                                                };
+                                                let needle = if case_sensitive {
+                                                    query.clone()
+                                                } else {
+                                                    query_lower.clone()
+                                                };
+                                                if hay.contains(&needle) {
+                                                    let snippet = if line.len() > 200 {
+                                                        format!("{}...", &line[..200])
+                                                    } else {
+                                                        line.clone()
+                                                    };
+
+                                                    let context_before = if i > 0 {
+                                                        Some(lines[i - 1].clone())
+                                                    } else {
+                                                        None
+                                                    };
+                                                    let context_after = if i < lines.len() - 1 {
+                                                        Some(lines[i + 1].clone())
+                                                    } else {
+                                                        None
+                                                    };
+
+                                                    let dt = DateTime::<Local>::from(
+                                                        std::time::UNIX_EPOCH
+                                                            + std::time::Duration::from_millis(
+                                                                timestamp_ms,
+                                                            ),
+                                                    );
+
+                                                    matches.push(MessageMatch {
+                                                        content_snippet: snippet,
+                                                        line_number: (i + 1) as u32,
+                                                        context_before,
+                                                        context_after,
+                                                        role: "unknown".to_string(),
+                                                        timestamp_iso: dt.to_rfc3339(),
+                                                    });
+                                                }
                                             }
                                         }
                                     }
-                                }
 
-                                    // Fallback to raw line matching ONLY when the line is not JSON.
-                                    // This prevents raw JSON-RPC logs from appearing in results.
-                                    if !matched && !parsed_json {
-                                        let hay = if case_sensitive {
-                                            line.clone()
-                                        } else {
-                                            line.to_lowercase()
-                                        };
-                                        let needle = if case_sensitive {
-                                            query.clone()
-                                        } else {
-                                            query_lower.clone()
-                                        };
-                                        if hay.contains(&needle) {
-                                            let snippet = if line.len() > 200 {
-                                                format!("{}...", &line[..200])
-                                            } else {
-                                                line.clone()
-                                            };
+                                    if !matches.is_empty() {
+                                        let title = generate_title_from_messages(&log_path);
+                                        let message_count = count_messages_in_log(&log_path);
 
-                                            let context_before = if i > 0 {
-                                                Some(lines[i - 1].clone())
-                                            } else {
-                                                None
-                                            };
-                                            let context_after = if i < lines.len() - 1 {
-                                                Some(lines[i + 1].clone())
-                                            } else {
-                                                None
-                                            };
+                                        let datetime = DateTime::<Local>::from(
+                                            std::time::UNIX_EPOCH
+                                                + std::time::Duration::from_millis(timestamp_ms),
+                                        );
 
-                                            let dt = DateTime::<Local>::from(
-                                                std::time::UNIX_EPOCH
-                                                    + std::time::Duration::from_millis(
-                                                        timestamp_ms,
-                                                    ),
-                                            );
+                                        let relevance_score = matches.len() as f32;
 
-                                            matches.push(MessageMatch {
-                                                content_snippet: snippet,
-                                                line_number: (i + 1) as u32,
-                                                context_before,
-                                                context_after,
-                                                role: "unknown".to_string(),
-                                                timestamp_iso: dt.to_rfc3339(),
-                                            });
-                                        }
+                                        results.push(SearchResult {
+                                            chat: RecentChat {
+                                                id: format!("{project_hash}/{filename}"),
+                                                title,
+                                                started_at_iso: datetime.to_rfc3339(),
+                                                message_count,
+                                                summary: None,
+                                                last_activity_iso: None,
+                                                total_tokens: None,
+                                                tags: vec![],
+                                            },
+                                            matches,
+                                            relevance_score,
+                                        });
                                     }
                                 }
-                            }
-
-                            if !matches.is_empty() {
-                                let title = generate_title_from_messages(&log_path);
-                                let message_count = count_messages_in_log(&log_path);
-
-                                let datetime = DateTime::<Local>::from(
-                                    std::time::UNIX_EPOCH
-                                        + std::time::Duration::from_millis(timestamp_ms),
-                                );
-
-                                let relevance_score = matches.len() as f32;
-
-                                results.push(SearchResult {
-                                    chat: RecentChat {
-                                        id: format!("{project_hash}/{filename}"),
-                                        title,
-                                        started_at_iso: datetime.to_rfc3339(),
-                                        message_count,
-                                        summary: None,
-                                        last_activity_iso: None,
-                                        total_tokens: None,
-                                        tags: vec![],
-                                    },
-                                    matches,
-                                    relevance_score,
-                                });
                             }
                         }
                     }
                 }
             }
-        }
-    }
         }
     }
 
@@ -818,7 +881,9 @@ pub async fn get_detailed_conversation(chat_id: &str) -> Result<DetailedConversa
                     match method {
                         "session/prompt" => {
                             if let Some(params) = json.get("params") {
-                                if let Some(prompt) = params.get("prompt").and_then(|p| p.as_array()) {
+                                if let Some(prompt) =
+                                    params.get("prompt").and_then(|p| p.as_array())
+                                {
                                     for content_block in prompt {
                                         if let Some(text) =
                                             content_block.get("text").and_then(|t| t.as_str())
@@ -852,22 +917,32 @@ pub async fn get_detailed_conversation(chat_id: &str) -> Result<DetailedConversa
                                                     {
                                                         // Aggregate chunks into complete messages
                                                         let mut appended = false;
-                                                        if let Some(last_msg) = messages.last_mut() {
-                                                            if last_msg.role == "assistant" && last_msg.message_type == "text" {
+                                                        if let Some(last_msg) = messages.last_mut()
+                                                        {
+                                                            if last_msg.role == "assistant"
+                                                                && last_msg.message_type == "text"
+                                                            {
                                                                 last_msg.content.push_str(text);
                                                                 appended = true;
                                                             }
                                                         }
 
                                                         if !appended {
-                                                            messages.push(ConversationHistoryEntry {
-                                                                id: format!("msg_{}", message_id_counter),
-                                                                role: "assistant".to_string(),
-                                                                content: text.to_string(),
-                                                                timestamp_iso: timestamp.to_string(),
-                                                                message_type: "text".to_string(),
-                                                                metadata: Some(json.clone()),
-                                                            });
+                                                            messages.push(
+                                                                ConversationHistoryEntry {
+                                                                    id: format!(
+                                                                        "msg_{}",
+                                                                        message_id_counter
+                                                                    ),
+                                                                    role: "assistant".to_string(),
+                                                                    content: text.to_string(),
+                                                                    timestamp_iso: timestamp
+                                                                        .to_string(),
+                                                                    message_type: "text"
+                                                                        .to_string(),
+                                                                    metadata: Some(json.clone()),
+                                                                },
+                                                            );
                                                             message_id_counter += 1;
                                                         }
                                                     }
@@ -880,9 +955,15 @@ pub async fn get_detailed_conversation(chat_id: &str) -> Result<DetailedConversa
                                                     {
                                                         // Add thinking content to messages for history
                                                         messages.push(ConversationHistoryEntry {
-                                                            id: format!("msg_{}", message_id_counter),
+                                                            id: format!(
+                                                                "msg_{}",
+                                                                message_id_counter
+                                                            ),
                                                             role: "assistant".to_string(),
-                                                            content: format!("*Thinking: {}*", text),
+                                                            content: format!(
+                                                                "*Thinking: {}*",
+                                                                text
+                                                            ),
                                                             timestamp_iso: timestamp.to_string(),
                                                             message_type: "thinking".to_string(),
                                                             metadata: Some(json.clone()),
@@ -892,16 +973,23 @@ pub async fn get_detailed_conversation(chat_id: &str) -> Result<DetailedConversa
                                                 }
                                             }
                                             "tool_call" => {
-                                                if let Some(_tool_call_id) =
-                                                    update.get("toolCallId").and_then(|id| id.as_str())
+                                                if let Some(_tool_call_id) = update
+                                                    .get("toolCallId")
+                                                    .and_then(|id| id.as_str())
                                                 {
                                                     if let Some(title) =
                                                         update.get("title").and_then(|t| t.as_str())
                                                     {
                                                         messages.push(ConversationHistoryEntry {
-                                                            id: format!("msg_{}", message_id_counter),
+                                                            id: format!(
+                                                                "msg_{}",
+                                                                message_id_counter
+                                                            ),
                                                             role: "assistant".to_string(),
-                                                            content: format!("Called tool: {}", title),
+                                                            content: format!(
+                                                                "Called tool: {}",
+                                                                title
+                                                            ),
                                                             timestamp_iso: timestamp.to_string(),
                                                             message_type: "tool_call".to_string(),
                                                             metadata: Some(json.clone()),
@@ -909,15 +997,17 @@ pub async fn get_detailed_conversation(chat_id: &str) -> Result<DetailedConversa
                                                         message_id_counter += 1;
 
                                                         // Extract file references from locations
-                                                        if let Some(locations) =
-                                                            update.get("locations").and_then(|l| l.as_array())
+                                                        if let Some(locations) = update
+                                                            .get("locations")
+                                                            .and_then(|l| l.as_array())
                                                         {
                                                             for location in locations {
                                                                 if let Some(path) = location
                                                                     .get("path")
                                                                     .and_then(|p| p.as_str())
                                                                 {
-                                                                    file_references.insert(path.to_string());
+                                                                    file_references
+                                                                        .insert(path.to_string());
                                                                 }
                                                             }
                                                         }
@@ -938,7 +1028,9 @@ pub async fn get_detailed_conversation(chat_id: &str) -> Result<DetailedConversa
                                     // Aggregate chunks into complete messages
                                     let mut appended = false;
                                     if let Some(last_msg) = messages.last_mut() {
-                                        if last_msg.role == "assistant" && last_msg.message_type == "text" {
+                                        if last_msg.role == "assistant"
+                                            && last_msg.message_type == "text"
+                                        {
                                             last_msg.content.push_str(chunk);
                                             appended = true;
                                         }
@@ -1117,7 +1209,7 @@ pub async fn delete_conversation(chat_id: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::{EnvGuard, TestDirManager, builders::*};
+    use crate::test_utils::{builders::*, EnvGuard, TestDirManager};
     use std::fs;
     use tempfile::TempDir;
 

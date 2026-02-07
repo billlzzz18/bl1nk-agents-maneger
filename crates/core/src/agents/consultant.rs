@@ -1,5 +1,6 @@
-use crate::agents::types::{AgentConfig, AgentPromptMetadata, AgentCategory, AgentCost, DelegationTrigger};
-use serde::{Deserialize, Serialize};
+use crate::agents::types::{
+    AgentCategory, AgentConfig, AgentCost, AgentPromptMetadata, DelegationTrigger,
+};
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -7,13 +8,14 @@ lazy_static! {
         category: AgentCategory::Advisor,
         cost: AgentCost::Expensive,
         prompt_alias: Some("Consultant".to_string()),
-        key_trigger: Some("Ambiguous or complex request → consult Consultant before Planner".to_string()),
-        triggers: vec![
-            DelegationTrigger {
-                domain: "Pre-planning analysis".to_string(),
-                trigger: "Complex task requiring scope clarification, ambiguous requirements".to_string(),
-            }
-        ],
+        key_trigger: Some(
+            "Ambiguous or complex request → consult Consultant before Planner".to_string()
+        ),
+        triggers: vec![DelegationTrigger {
+            domain: "Pre-planning analysis".to_string(),
+            trigger: "Complex task requiring scope clarification, ambiguous requirements"
+                .to_string(),
+        }],
         use_when: Some(vec![
             "Before planning non-trivial tasks".to_string(),
             "When user request is ambiguous or open-ended".to_string(),
@@ -284,12 +286,7 @@ call_omo_agent(subagent_type="researcher", prompt="Find OSS implementations of Z
 "##########;
 
 pub fn create_consultant_agent(model: &str) -> AgentConfig {
-    let restrictions = create_agent_tool_restrictions(&[
-        "write",
-        "edit",
-        "task", 
-        "delegate_task",
-    ]);
+    let restrictions = create_agent_tool_restrictions(&["write", "edit", "task", "delegate_task"]);
 
     AgentConfig {
         description: Some("Pre-planning consultant that analyzes requests to identify hidden intentions, ambiguities, and AI failure points.".to_string()),
@@ -316,17 +313,18 @@ pub fn create_consultant_agent(model: &str) -> AgentConfig {
         color: None,
         reasoning_effort: None,
         skills: None,
+        text_verbosity: None,
     }
 }
 
 fn create_agent_tool_restrictions(restricted_tools: &[&str]) -> AgentConfig {
     let mut permission = std::collections::HashMap::new();
-    
+
     // Deny the restricted tools
     for tool in restricted_tools {
         permission.insert(tool.to_string(), "deny".to_string());
     }
-    
+
     AgentConfig {
         permission: Some(permission),
         ..Default::default()

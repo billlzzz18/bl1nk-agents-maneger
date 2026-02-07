@@ -3,13 +3,13 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-pub mod extra_types;
-pub mod handler;
+// Note: extra_types and handler are declared as submodules in config/mod.rs
+// to avoid path resolution issues with nested modules
 
 use crate::agents::types::AgentConfig;
 #[cfg(feature = "bundle-pmat")]
 use crate::agents::types::RateLimit;
-pub use crate::configs::schema::*;
+pub use crate::config::schema::*;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {
@@ -235,8 +235,9 @@ impl Config {
 
         // Validate routing rules reference valid agents
         let agent_ids: Vec<String> = self.agents.iter().map(|a| a.id.clone()).collect();
-        let agent_set: std::collections::HashSet<&str> = agent_ids.iter().map(|s| s.as_str()).collect();
-        
+        let agent_set: std::collections::HashSet<&str> =
+            agent_ids.iter().map(|s| s.as_str()).collect();
+
         for rule in &self.routing.rules {
             for preferred_agent in &rule.preferred_agents {
                 if !agent_set.contains(preferred_agent.as_str()) {

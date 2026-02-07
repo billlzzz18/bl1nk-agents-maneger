@@ -1,4 +1,7 @@
 # AGENTS KNOWLEDGE BASE
+## 📌 Project Status (Feb 7, 2026)
+
+For a non‑developer summary of what is complete vs in progress, see `docs/PROJECT_STATUS.md`.
 
 ## OVERVIEW
 

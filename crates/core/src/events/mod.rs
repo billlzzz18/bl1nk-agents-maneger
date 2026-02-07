@@ -38,12 +38,16 @@ pub enum InternalEvent {
     // Pure ACP events - the future
     AcpSessionUpdate {
         session_id: String,
-        update: crate::acp::SessionUpdate,
+        update: crate::adapters::acp::SessionUpdate,
     },
     AcpPermissionRequest {
         session_id: String,
         request_id: u64,
-        request: crate::acp::SessionRequestPermissionParams,
+        request: crate::adapters::acp::SessionRequestPermissionParams,
+    },
+    AuthPermissionRequest {
+        session_id: String,
+        payload: AuthPermissionRequest,
     },
     GeminiTurnFinished {
         session_id: String,
@@ -95,6 +99,14 @@ pub struct SessionProgressPayload {
     pub message: String,
     pub progress_percent: Option<u8>, // 0-100
     pub details: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthPermissionRequest {
+    pub method: String,
+    pub reason: String,
+    pub action: String,
+    pub hint: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

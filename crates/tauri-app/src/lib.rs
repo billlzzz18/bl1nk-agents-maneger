@@ -5,7 +5,7 @@ mod event_emitter;
 mod menu;
 mod state;
 
-use backend::GeminiBackend;
+use bl1nk_core::GeminiBackend;
 use event_emitter::TauriEventEmitter;
 use state::AppState;
 use std::sync::Arc;
@@ -61,6 +61,7 @@ pub fn run() {
             commands::test_cli_command,
             commands::send_tool_call_confirmation_response,
             commands::execute_confirmed_command,
+            commands::approve_oauth,
             commands::generate_conversation_title,
             commands::validate_directory,
             commands::is_home_directory,
@@ -69,6 +70,7 @@ pub fn run() {
             commands::list_directory_contents,
             commands::list_files_recursive,
             commands::list_volumes,
+            commands::list_gemini_commands,
             commands::get_git_info,
             commands::debug_environment,
             commands::get_recent_chats,

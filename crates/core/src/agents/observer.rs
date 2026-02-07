@@ -1,5 +1,4 @@
-use crate::agents::types::{AgentConfig, AgentPromptMetadata, AgentCategory, AgentCost, DelegationTrigger};
-use serde::{Deserialize, Serialize};
+use crate::agents::types::{AgentCategory, AgentConfig, AgentCost, AgentPromptMetadata};
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -40,17 +39,18 @@ pub fn create_observer_agent(model: &str) -> AgentConfig {
         thinking: None,
         reasoning_effort: None,
         skills: None,
+        text_verbosity: None,
     }
 }
 
 fn create_agent_tool_allowlist(allowed_tools: &[&str]) -> AgentConfig {
     let mut permission = std::collections::HashMap::new();
-    
+
     // Allow only the specified tools, deny others by default
     for tool in allowed_tools {
         permission.insert(tool.to_string(), "allow".to_string());
     }
-    
+
     AgentConfig {
         permission: Some(permission),
         ..Default::default()
@@ -89,5 +89,6 @@ Response rules:
 - Match the language of the request
 - Be thorough on the goal, concise on everything else
 
-Your output goes straight to the main agent for continued work."####.to_string()
+Your output goes straight to the main agent for continued work."####
+        .to_string()
 }

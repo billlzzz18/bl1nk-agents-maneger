@@ -1,7 +1,7 @@
 // src/agents/creator.rs
 //! Agent Creator - Generates agent specifications from natural language requirements
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs;
@@ -33,6 +33,7 @@ pub struct TriggerExample {
 
 /// Agent Creator - generates agent specifications
 pub struct AgentCreator {
+    #[allow(dead_code)]
     template_dir: String,
     output_dir: String,
 }
@@ -49,14 +50,13 @@ impl AgentCreator {
     pub async fn create_agent(
         &self,
         requirements: &str,
-        context: Option<Value>,
+        _context: Option<Value>,
     ) -> Result<AgentSpec> {
         tracing::info!("🤖 Agent Creator: Generating agent from requirements");
         tracing::debug!("Requirements: {}", requirements);
 
         // Ensure output directory exists
-        fs::create_dir_all(&self.output_dir)
-            .context("Failed to create output directory")?;
+        fs::create_dir_all(&self.output_dir).context("Failed to create output directory")?;
 
         // 1. Parse requirements
         let parsed = self.parse_requirements(requirements)?;
@@ -105,9 +105,11 @@ impl AgentCreator {
     fn parse_requirements(&self, requirements: &str) -> Result<ParsedRequirements> {
         // Extract key information from natural language
         let requirements_lower = requirements.to_lowercase();
-        
+
         // Determine purpose
-        let purpose = if requirements_lower.contains("review") || requirements_lower.contains("analyze") {
+        let purpose = if requirements_lower.contains("review")
+            || requirements_lower.contains("analyze")
+        {
             "code review and analysis"
         } else if requirements_lower.contains("generate") || requirements_lower.contains("create") {
             "code generation"
@@ -154,7 +156,10 @@ impl AgentCreator {
         // Simple heuristic: take first few meaningful words
         let words: Vec<&str> = requirements
             .split_whitespace()
-            .filter(|w| !["a", "an", "the", "that", "this", "creates", "generates"].contains(&w.to_lowercase().as_str()))
+            .filter(|w| {
+                !["a", "an", "the", "that", "this", "creates", "generates"]
+                    .contains(&w.to_lowercase().as_str())
+            })
             .take(3)
             .collect();
 
@@ -162,7 +167,8 @@ impl AgentCreator {
             return Ok("Generated Agent".to_string());
         }
 
-        Ok(words.join(" ")
+        Ok(words
+            .join(" ")
             .split(|c: char| !c.is_alphanumeric() && c != ' ')
             .collect::<Vec<&str>>()
             .join(" ")
@@ -178,23 +184,23 @@ impl AgentCreator {
             .filter(|w| w.len() > 2) // Skip short words
             .take(4)
             .collect();
-        
+
         let mut identifier = words.join("-");
-        
+
         // Remove special characters, keep only alphanumeric and hyphens
         identifier = identifier
             .chars()
             .filter(|c| c.is_alphanumeric() || *c == '-')
             .collect();
-        
+
         // Remove consecutive hyphens
         while identifier.contains("--") {
             identifier = identifier.replace("--", "-");
         }
-        
+
         // Trim hyphens from ends
         identifier = identifier.trim_matches('-').to_string();
-        
+
         // Ensure valid length (3-50)
         if identifier.len() < 3 {
             identifier = format!("{}-agent", identifier);
@@ -203,19 +209,24 @@ impl AgentCreator {
             identifier.truncate(50);
             identifier = identifier.trim_end_matches('-').to_string();
         }
-        
+
         // Ensure doesn't start with number
-        if identifier.chars().next().map(|c| c.is_numeric()).unwrap_or(false) {
+        if identifier
+            .chars()
+            .next()
+            .map(|c| c.is_numeric())
+            .unwrap_or(false)
+        {
             identifier = format!("agent-{}", identifier);
         }
-        
+
         Ok(identifier)
     }
 
     /// Create comprehensive system prompt
     fn create_system_prompt(&self, parsed: &ParsedRequirements) -> Result<String> {
         let template = format!(
-r####"You are an expert {} agent with deep domain knowledge.
+            r####"You are an expert {} agent with deep domain knowledge.
 
 ## Your Core Mission
 
@@ -296,9 +307,7 @@ Your responses should always:
 
 Remember: Your goal is to provide exceptional service through expertise, precision, and clarity.
 "####,
-            parsed.name,
-            parsed.purpose,
-            parsed.when_to_use
+            parsed.name, parsed.purpose, parsed.when_to_use
         );
 
         Ok(template)
@@ -307,7 +316,7 @@ Remember: Your goal is to provide exceptional service through expertise, precisi
     /// Generate trigger examples
     fn generate_examples(&self, parsed: &ParsedRequirements) -> Result<Vec<TriggerExample>> {
         let identifier_guess = self.generate_identifier(&parsed.purpose)?;
-        
+
         let examples = vec![
             TriggerExample {
                 context: format!("User needs help with {}", parsed.purpose),
@@ -318,8 +327,7 @@ Remember: Your goal is to provide exceptional service through expertise, precisi
                 ),
                 commentary: format!(
                     "User requesting {}, trigger the {} agent.",
-                    parsed.purpose,
-                    identifier_guess
+                    parsed.purpose, identifier_guess
                 ),
             },
             TriggerExample {
@@ -351,7 +359,7 @@ Remember: Your goal is to provide exceptional service through expertise, precisi
     /// Select color based on agent purpose
     fn select_color(&self, parsed: &ParsedRequirements) -> String {
         let purpose_lower = parsed.purpose.to_lowercase();
-        
+
         if purpose_lower.contains("review") || purpose_lower.contains("analyz") {
             "blue".to_string()
         } else if purpose_lower.contains("generat") || purpose_lower.contains("creat") {
@@ -379,13 +387,30 @@ Remember: Your goal is to provide exceptional service through expertise, precisi
         }
 
         // Check lowercase and hyphens only
-        if !spec.identifier.chars().all(|c| c.is_lowercase() || c.is_numeric() || c == '-') {
-            bail!("Identifier '{}' must be lowercase with hyphens only", spec.identifier);
+        if !spec
+            .identifier
+            .chars()
+            .all(|c| c.is_lowercase() || c.is_numeric() || c == '-')
+        {
+            bail!(
+                "Identifier '{}' must be lowercase with hyphens only",
+                spec.identifier
+            );
         }
 
         // Check doesn't start with hyphen or number
-        if spec.identifier.starts_with('-') || spec.identifier.chars().next().map(|c| c.is_numeric()).unwrap_or(false) {
-            bail!("Identifier '{}' cannot start with hyphen or number", spec.identifier);
+        if spec.identifier.starts_with('-')
+            || spec
+                .identifier
+                .chars()
+                .next()
+                .map(|c| c.is_numeric())
+                .unwrap_or(false)
+        {
+            bail!(
+                "Identifier '{}' cannot start with hyphen or number",
+                spec.identifier
+            );
         }
 
         // Check system prompt length
@@ -406,24 +431,28 @@ Remember: Your goal is to provide exceptional service through expertise, precisi
     /// Write agent specification to TOML file
     fn write_agent_file(&self, spec: &AgentSpec) -> Result<()> {
         let filename = format!("{}/{}.toml", self.output_dir, spec.identifier);
-        
-        let examples_toml: Vec<String> = spec.examples.iter().map(|ex| {
-            format!(
-r####"[[agent.examples]]
+
+        let examples_toml: Vec<String> = spec
+            .examples
+            .iter()
+            .map(|ex| {
+                format!(
+                    r####"[[agent.examples]]
 context = "{}"
 user_message = "{}"
 assistant_response = "{}"
 commentary = "{}"
 "####,
-                ex.context,
-                ex.user_message.replace('"', "\\\""),
-                ex.assistant_response.replace('"', "\\\""),
-                ex.commentary.replace('"', "\\\"")
-            )
-        }).collect();
+                    ex.context,
+                    ex.user_message.replace('"', "\\\""),
+                    ex.assistant_response.replace('"', "\\\""),
+                    ex.commentary.replace('"', "\\\"")
+                )
+            })
+            .collect();
 
         let content = format!(
-r####"#### Agent: {}
+            r####"#### Agent: {}
 # Auto-generated by BL1NK Agent Creator
 
 [agent]
@@ -511,15 +540,12 @@ mod tests {
         let temp = TempDir::new().unwrap();
         let output_dir = temp.path().to_str().unwrap().to_string();
 
-        let creator = AgentCreator::new(
-            "templates".to_string(),
-            output_dir.clone(),
-        );
+        let creator = AgentCreator::new("templates".to_string(), output_dir.clone());
 
-        let spec = creator.create_agent(
-            "Create an agent that reviews code for quality issues",
-            None,
-        ).await.unwrap();
+        let spec = creator
+            .create_agent("Create an agent that reviews code for quality issues", None)
+            .await
+            .unwrap();
 
         assert!(spec.identifier.len() >= 3);
         assert!(spec.identifier.len() <= 50);
@@ -534,9 +560,13 @@ mod tests {
     fn test_identifier_generation() {
         let creator = AgentCreator::new("".to_string(), "".to_string());
 
-        let id = creator.generate_identifier("code review and analysis").unwrap();
+        let id = creator
+            .generate_identifier("code review and analysis")
+            .unwrap();
         assert!(id.len() >= 3);
-        assert!(id.chars().all(|c| c.is_lowercase() || c.is_numeric() || c == '-'));
+        assert!(id
+            .chars()
+            .all(|c| c.is_lowercase() || c.is_numeric() || c == '-'));
     }
 
     #[test]

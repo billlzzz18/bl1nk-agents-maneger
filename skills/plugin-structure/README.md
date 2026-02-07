@@ -1,109 +1,39 @@
-# Plugin Structure Skill
+# skills/plugin-structure
+## 📌 Project Status (Feb 7, 2026)
 
-Comprehensive guidance on Claude Code plugin architecture, directory layout, and best practices.
+Bl1nk Agents Manager is in active development and is not feature‑complete yet.
+This repo contains a working extension shell and a Rust core that is being
+brought to feature parity with existing TypeScript logic.
 
-## Overview
+**What works now**
+- Extension manifest and Gemini CLI scaffolding are present.
+- Core Rust modules exist for agents, hooks, MCP/ACP, sessions, and RPC.
+- Command and documentation sets are present (currently being refreshed).
 
-This skill provides detailed knowledge about:
-- Plugin directory structure and organization
-- `plugin.json` manifest configuration
-- Component organization (commands, agents, skills, hooks)
-- Auto-discovery mechanisms
-- Portable path references with `${CLAUDE_PLUGIN_ROOT}`
-- File naming conventions
+**In progress**
+- TypeScript → Rust parity for large subsystems (background agents, config,
+  ACP normalization).
+- End‑to‑end session flows for Gemini/Codex/Qwen within a unified adapter.
+- Validation of hook behavior and task orchestration across agents.
 
-## Skill Structure
+**Known gaps**
+- Some Rust modules compile but are not fully wired end‑to‑end.
+- Configuration loading/migration is still being aligned to actual runtime.
+- Authentication flows for some CLIs still require manual steps.
 
-### SKILL.md (1,619 words)
+**What to expect right now**
+- You can explore the architecture, commands, and agent catalogs.
+- Some workflows will still require manual setup or troubleshooting.
 
-Core skill content covering:
-- Directory structure overview
-- Plugin manifest (plugin.json) fields
-- Component organization patterns
-- ${CLAUDE_PLUGIN_ROOT} usage
-- File naming conventions
-- Auto-discovery mechanism
-- Best practices
-- Common patterns
-- Troubleshooting
+For a complete non‑developer overview, see `docs/PROJECT_STATUS.md`.
 
-### References
+Skill directory with SKILL.md and optional resources.
 
-Detailed documentation for deep dives:
+## Key Files
 
-- **manifest-reference.md**: Complete `plugin.json` field reference
-  - All field descriptions and examples
-  - Path resolution rules
-  - Validation guidelines
-  - Minimal vs. complete manifest examples
+- `SKILL.md`
 
-- **component-patterns.md**: Advanced organization patterns
-  - Component lifecycle (discovery, activation)
-  - Command organization patterns
-  - Agent organization patterns
-  - Skill organization patterns
-  - Hook organization patterns
-  - Script organization patterns
-  - Cross-component patterns
-  - Best practices for scalability
+## Key Subdirectories
 
-### Examples
-
-Three complete plugin examples:
-
-- **minimal-plugin.md**: Simplest possible plugin
-  - Single command
-  - Minimal manifest
-  - When to use this pattern
-
-- **standard-plugin.md**: Well-structured production plugin
-  - Multiple components (commands, agents, skills, hooks)
-  - Complete manifest with metadata
-  - Rich skill structure
-  - Integration between components
-
-- **advanced-plugin.md**: Enterprise-grade plugin
-  - Multi-level organization
-  - MCP server integration
-  - Shared libraries
-  - Configuration management
-  - Security automation
-  - Monitoring integration
-
-## When This Skill Triggers
-
-Claude Code activates this skill when users:
-- Ask to "create a plugin" or "scaffold a plugin"
-- Need to "understand plugin structure"
-- Want to "organize plugin components"
-- Need to "set up plugin.json"
-- Ask about "${CLAUDE_PLUGIN_ROOT}" usage
-- Want to "add commands/agents/skills/hooks"
-- Need "configure auto-discovery" help
-- Ask about plugin architecture or best practices
-
-## Progressive Disclosure
-
-The skill uses progressive disclosure to manage context:
-
-1. **SKILL.md** (~1600 words): Core concepts and workflows
-2. **References** (~6000 words): Detailed field references and patterns
-3. **Examples** (~8000 words): Complete working examples
-
-Claude loads references and examples only as needed based on the task.
-
-## Related Skills
-
-This skill works well with:
-- **hook-development**: For creating plugin hooks
-- **mcp-integration**: For integrating MCP servers (when available)
-- **marketplace-publishing**: For publishing plugins (when available)
-
-## Maintenance
-
-To update this skill:
-1. Keep SKILL.md lean and focused on core concepts
-2. Move detailed information to references/
-3. Add new examples/ for common patterns
-4. Update version in SKILL.md frontmatter
-5. Ensure all documentation uses imperative/infinitive form
+- `examples/`
+- `references/`

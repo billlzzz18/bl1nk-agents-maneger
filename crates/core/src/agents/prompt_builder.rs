@@ -1,4 +1,4 @@
-use crate::agents::types::{AgentPromptMetadata, BuiltinAgentName, AgentName};
+use crate::agents::types::{AgentName, AgentPromptMetadata, BuiltinAgentName};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,32 +56,44 @@ pub struct AvailableCategory {
 }
 
 pub fn categorize_tools(tool_names: &[String]) -> Vec<AvailableTool> {
-    tool_names.iter().map(|name| {
-        let category = if name.starts_with("lsp_") {
-            ToolCategory::Lsp
-        } else if name.starts_with("ast_grep") {
-            ToolCategory::Ast
-        } else if name == "grep" || name == "glob" {
-            ToolCategory::Search
-        } else if name.starts_with("session_") {
-            ToolCategory::Session
-        } else if name == "slashcommand" {
-            ToolCategory::Command
-        } else {
-            ToolCategory::Other
-        };
-        
-        AvailableTool {
-            name: name.clone(),
-            category,
-        }
-    }).collect()
+    tool_names
+        .iter()
+        .map(|name| {
+            let category = if name.starts_with("lsp_") {
+                ToolCategory::Lsp
+            } else if name.starts_with("ast_grep") {
+                ToolCategory::Ast
+            } else if name == "grep" || name == "glob" {
+                ToolCategory::Search
+            } else if name.starts_with("session_") {
+                ToolCategory::Session
+            } else if name == "slashcommand" {
+                ToolCategory::Command
+            } else {
+                ToolCategory::Other
+            };
+
+            AvailableTool {
+                name: name.clone(),
+                category,
+            }
+        })
+        .collect()
 }
 
 fn format_tools_for_prompt(tools: &[AvailableTool]) -> String {
-    let lsp_tools: Vec<&AvailableTool> = tools.iter().filter(|t| matches!(t.category, ToolCategory::Lsp)).collect();
-    let ast_tools: Vec<&AvailableTool> = tools.iter().filter(|t| matches!(t.category, ToolCategory::Ast)).collect();
-    let search_tools: Vec<&AvailableTool> = tools.iter().filter(|t| matches!(t.category, ToolCategory::Search)).collect();
+    let lsp_tools: Vec<&AvailableTool> = tools
+        .iter()
+        .filter(|t| matches!(t.category, ToolCategory::Lsp))
+        .collect();
+    let ast_tools: Vec<&AvailableTool> = tools
+        .iter()
+        .filter(|t| matches!(t.category, ToolCategory::Ast))
+        .collect();
+    let search_tools: Vec<&AvailableTool> = tools
+        .iter()
+        .filter(|t| matches!(t.category, ToolCategory::Search))
+        .collect();
 
     let mut parts = Vec::new();
 
@@ -132,7 +144,10 @@ pub fn build_tool_selection_table(
 
     if !tools.is_empty() {
         let tools_display = format_tools_for_prompt(tools);
-        rows.push(format!("| {} | FREE | Not Complex, Scope Clear, No Implicit Assumptions |", tools_display));
+        rows.push(format!(
+            "| {} | FREE | Not Complex, Scope Clear, No Implicit Assumptions |",
+            tools_display
+        ));
     }
 
     // Define cost ordering
@@ -148,14 +163,18 @@ pub fn build_tool_selection_table(
         .iter()
         .filter(|a| a.metadata.category != crate::agents::types::AgentCategory::Utility)
         .collect();
-    
+
     sorted_agents.sort_by(|a, b| cost_order(&a.metadata.cost).cmp(&cost_order(&b.metadata.cost)));
 
     for agent in sorted_agents {
-        let short_desc = agent.description.split('.').next().unwrap_or(&agent.description);
+        let short_desc = agent
+            .description
+            .split('.')
+            .next()
+            .unwrap_or(&agent.description);
         rows.push(format!(
             "| `{}` agent | {} | {} |",
-            agent.name.to_string(),
+            agent.name,
             match agent.metadata.cost {
                 crate::agents::types::AgentCost::Free => "FREE",
                 crate::agents::types::AgentCost::Cheap => "CHEAP",
@@ -166,29 +185,36 @@ pub fn build_tool_selection_table(
     }
 
     rows.push("".to_string());
-    rows.push("**Default flow**: explorer/researcher (background) + tools → expert (if required)".to_string());
+    rows.push(
+        "**Default flow**: explorer/researcher (background) + tools → expert (if required)"
+            .to_string(),
+    );
 
     rows.join("\n")
 }
 
 pub fn build_explorer_section(agents: &[AvailableAgent]) -> String {
-    let explorer_agent = agents.iter().find(|a| matches!(a.name, AgentName::Builtin(BuiltinAgentName::Explorer)));
+    let explorer_agent = agents
+        .iter()
+        .find(|a| matches!(a.name, AgentName::Builtin(BuiltinAgentName::Explorer)));
     if let Some(agent) = explorer_agent {
-        let use_when = agent.metadata.use_when.as_ref().unwrap_or(&vec![]);
-        let avoid_when = agent.metadata.avoid_when.as_ref().unwrap_or(&vec![]);
+        let empty_use: Vec<String> = Vec::new();
+        let empty_avoid: Vec<String> = Vec::new();
+        let use_when = agent.metadata.use_when.as_ref().unwrap_or(&empty_use);
+        let avoid_when = agent.metadata.avoid_when.as_ref().unwrap_or(&empty_avoid);
 
         let mut result = "######### Explorer Agent = Contextual Grep\n\nUse it as a **peer tool**, not a fallback. Fire liberally.\n\n".to_string();
         result.push_str("| Use Direct Tools | Use Explorer Agent |\n");
         result.push_str("|------------------|-------------------|\n");
-        
+
         for w in avoid_when {
             result.push_str(&format!("| {} |  |\n", w));
         }
-        
+
         for w in use_when {
             result.push_str(&format!("|  | {} |\n", w));
         }
-        
+
         return result;
     }
 
@@ -196,9 +222,12 @@ pub fn build_explorer_section(agents: &[AvailableAgent]) -> String {
 }
 
 pub fn build_researcher_section(agents: &[AvailableAgent]) -> String {
-    let researcher_agent = agents.iter().find(|a| matches!(a.name, AgentName::Builtin(BuiltinAgentName::Researcher)));
+    let researcher_agent = agents
+        .iter()
+        .find(|a| matches!(a.name, AgentName::Builtin(BuiltinAgentName::Researcher)));
     if let Some(agent) = researcher_agent {
-        let use_when = agent.metadata.use_when.as_ref().unwrap_or(&vec![]);
+        let empty_use: Vec<String> = Vec::new();
+        let use_when = agent.metadata.use_when.as_ref().unwrap_or(&empty_use);
 
         let mut result = "######### Researcher Agent = Reference Grep\n\nSearch **external references** (docs, OSS, web). Fire proactively when unfamiliar libraries are involved.\n\n".to_string();
         result.push_str("| Contextual Grep (Internal) | Reference Grep (External) |\n");
@@ -210,11 +239,11 @@ pub fn build_researcher_section(agents: &[AvailableAgent]) -> String {
         result.push_str("| | Library best practices & quirks |\n");
         result.push_str("| | OSS implementation examples |\n");
         result.push_str("\n**Trigger phrases** (fire researcher immediately):\n");
-        
+
         for w in use_when {
             result.push_str(&format!("- \"{}\"\n", w));
         }
-        
+
         return result;
     }
 
@@ -233,9 +262,7 @@ pub fn build_delegation_table(agents: &[AvailableAgent]) -> String {
         for trigger in &agent.metadata.triggers {
             rows.push(format!(
                 "| {} | `{}` | {} |",
-                trigger.domain,
-                agent.name.to_string(),
-                trigger.trigger
+                trigger.domain, agent.name, trigger.trigger
             ));
         }
     }
@@ -243,20 +270,33 @@ pub fn build_delegation_table(agents: &[AvailableAgent]) -> String {
     rows.join("\n")
 }
 
-pub fn build_category_skills_delegation_guide(categories: &[AvailableCategory], skills: &[AvailableSkill]) -> String {
+pub fn build_category_skills_delegation_guide(
+    categories: &[AvailableCategory],
+    skills: &[AvailableSkill],
+) -> String {
     if categories.is_empty() && skills.is_empty() {
         return String::new();
     }
 
-    let category_rows: Vec<String> = categories.iter().map(|c| {
-        let desc = if c.description.is_empty() { c.name.clone() } else { c.description.clone() };
-        format!("| `{}` | {} |", c.name, desc)
-    }).collect();
+    let category_rows: Vec<String> = categories
+        .iter()
+        .map(|c| {
+            let desc = if c.description.is_empty() {
+                c.name.clone()
+            } else {
+                c.description.clone()
+            };
+            format!("| `{}` | {} |", c.name, desc)
+        })
+        .collect();
 
-    let skill_rows: Vec<String> = skills.iter().map(|s| {
-        let desc = s.description.split('.').next().unwrap_or(&s.description);
-        format!("| `{}` | {} |", s.name, desc)
-    }).collect();
+    let skill_rows: Vec<String> = skills
+        .iter()
+        .map(|s| {
+            let desc = s.description.split('.').next().unwrap_or(&s.description);
+            format!("| `{}` | {} |", s.name, desc)
+        })
+        .collect();
 
     format!(
         "######### Category + Skills Delegation System
@@ -335,7 +375,9 @@ delegate_task(category=\"...\", load_skills=[], prompt=\"...\")  // Empty load_s
 }
 
 pub fn build_expert_section(agents: &[AvailableAgent]) -> String {
-    let expert_agent = agents.iter().find(|a| matches!(a.name, AgentName::Builtin(BuiltinAgentName::Expert)));
+    let expert_agent = agents
+        .iter()
+        .find(|a| matches!(a.name, AgentName::Builtin(BuiltinAgentName::Expert)));
     if let Some(agent) = expert_agent {
         let empty_vec = vec![];
         let use_when = agent.metadata.use_when.as_ref().unwrap_or(&empty_vec);
@@ -417,16 +459,25 @@ pub fn build_ultrawork_section(
     if !categories.is_empty() {
         lines.push("**Categories** (for implementation tasks):".to_string());
         for cat in categories {
-            let short_desc = if cat.description.is_empty() { cat.name.clone() } else { cat.description.clone() };
+            let short_desc = if cat.description.is_empty() {
+                cat.name.clone()
+            } else {
+                cat.description.clone()
+            };
             lines.push(format!("- `{}`: {}", cat.name, short_desc));
         }
         lines.push("".to_string());
     }
 
     if !skills.is_empty() {
-        lines.push("**Skills** (combine with categories - EVALUATE ALL for relevance):".to_string());
+        lines
+            .push("**Skills** (combine with categories - EVALUATE ALL for relevance):".to_string());
         for skill in skills {
-            let short_desc = skill.description.split('.').next().unwrap_or(&skill.description);
+            let short_desc = skill
+                .description
+                .split('.')
+                .next()
+                .unwrap_or(&skill.description);
             lines.push(format!("- `{}`: {}", skill.name, short_desc));
         }
         lines.push("".to_string());
@@ -439,10 +490,14 @@ pub fn build_ultrawork_section(
         sorted_agents.sort_by(|a, b| {
             let a_name = a.name.to_string();
             let b_name = b.name.to_string();
-            
-            let a_idx = ultrawork_agent_priority.iter().position(|&x| x == a_name.as_str());
-            let b_idx = ultrawork_agent_priority.iter().position(|&x| x == b_name.as_str());
-            
+
+            let a_idx = ultrawork_agent_priority
+                .iter()
+                .position(|&x| x == a_name.as_str());
+            let b_idx = ultrawork_agent_priority
+                .iter()
+                .position(|&x| x == b_name.as_str());
+
             match (a_idx, b_idx) {
                 (Some(a_pos), Some(b_pos)) => a_pos.cmp(&b_pos),
                 (Some(_), None) => std::cmp::Ordering::Less,
@@ -453,13 +508,18 @@ pub fn build_ultrawork_section(
 
         lines.push("**Agents** (for specialized consultation/exploration):".to_string());
         for agent in sorted_agents {
-            let short_desc = agent.description.split('.').next().unwrap_or(&agent.description);
-            let suffix = if agent.name.to_string() == "explorer" || agent.name.to_string() == "researcher" {
-                " (multiple)"
-            } else {
-                ""
-            };
-            lines.push(format!("- `{}{}`: {}", agent.name.to_string(), suffix, short_desc));
+            let short_desc = agent
+                .description
+                .split('.')
+                .next()
+                .unwrap_or(&agent.description);
+            let suffix =
+                if agent.name.to_string() == "explorer" || agent.name.to_string() == "researcher" {
+                    " (multiple)"
+                } else {
+                    ""
+                };
+            lines.push(format!("- `{}{}`: {}", agent.name, suffix, short_desc));
         }
     }
 

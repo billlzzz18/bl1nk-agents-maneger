@@ -1,4 +1,5 @@
-use crate::config::{AgentConfig, RoutingConfig, RoutingRule, RoutingTier};
+use crate::agents::types::AgentConfig;
+use crate::config::{RoutingConfig, RoutingRule, RoutingTier};
 use anyhow::Result;
 use std::cmp::Ordering;
 
@@ -64,10 +65,14 @@ impl AgentRouter {
         available_agents: &'a [&'a AgentConfig],
     ) -> Result<&'a AgentConfig> {
         tracing::debug!("🔍 Router: Selecting agent for task_type='{}'", task_type);
-        tracing::debug!("📝 Prompt: {}", prompt.chars().take(100).collect::<String>());
+        tracing::debug!(
+            "📝 Prompt: {}",
+            prompt.chars().take(100).collect::<String>()
+        );
 
         // Find all matching rules
-        let matching_rules: Vec<ScoredRule> = self.routing_config
+        let matching_rules: Vec<ScoredRule> = self
+            .routing_config
             .rules
             .iter()
             .filter(|rule| rule.enabled && self.rule_matches(rule, task_type, prompt))
@@ -133,28 +138,28 @@ impl AgentRouter {
         }
 
         let prompt_lower = prompt.to_lowercase();
-        rule.keywords.iter().any(|keyword| {
-            prompt_lower.contains(&keyword.to_lowercase())
-        })
+        rule.keywords
+            .iter()
+            .any(|keyword| prompt_lower.contains(&keyword.to_lowercase()))
     }
 
     /// Fallback: select highest priority available agent
     fn fallback_by_priority<'a>(
-        available_agents: &'a [&'a AgentConfig]
+        available_agents: &'a [&'a AgentConfig],
     ) -> Result<&'a AgentConfig> {
-        available_agents
+        let agent = available_agents
             .iter()
             .max_by_key(|a| a.priority)
             .copied()
-            .ok_or_else(|| anyhow::anyhow!("No available agents"))
-            .map(|agent| {
-                tracing::info!(
-                    "✅ Selected agent '{}' by priority fallback (priority={})",
-                    agent.id,
-                    agent.priority
-                );
-                agent
-            })
+            .ok_or_else(|| anyhow::anyhow!("No available agents"))?;
+
+        tracing::info!(
+            "✅ Selected agent '{}' by priority fallback (priority={})",
+            agent.id,
+            agent.priority
+        );
+
+        Ok(agent)
     }
 
     /// Get agents that match task requirements
@@ -164,7 +169,8 @@ impl AgentRouter {
         all_agents: &'a [&'a AgentConfig],
     ) -> Vec<&'a AgentConfig> {
         // Extract capabilities from matching rules
-        let required_capabilities: Vec<String> = self.routing_config
+        let required_capabilities: Vec<String> = self
+            .routing_config
             .rules
             .iter()
             .filter(|rule| rule.enabled && rule.task_type == task_type)
@@ -185,9 +191,10 @@ impl AgentRouter {
         all_agents
             .iter()
             .filter(|agent| {
-                agent.capabilities.iter().any(|cap| {
-                    required_capabilities.contains(cap)
-                })
+                agent
+                    .capabilities
+                    .iter()
+                    .any(|cap| required_capabilities.contains(cap))
             })
             .copied()
             .collect()
@@ -197,7 +204,7 @@ impl AgentRouter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::RateLimit;
+    use crate::agents::types::RateLimit;
 
     fn create_test_agent(id: &str, capabilities: Vec<&str>, priority: u8) -> AgentConfig {
         AgentConfig {
@@ -211,6 +218,18 @@ mod tests {
             capabilities: capabilities.iter().map(|s| s.to_string()).collect(),
             priority,
             enabled: true,
+            description: None,
+            model: None,
+            temperature: None,
+            max_tokens: None,
+            prompt: None,
+            color: None,
+            permission: None,
+            mode: None,
+            thinking: None,
+            reasoning_effort: None,
+            text_verbosity: None,
+            skills: None,
         }
     }
 
@@ -257,22 +276,18 @@ mod tests {
     fn test_keyword_matching() {
         let routing_config = RoutingConfig {
             tier: RoutingTier::Default,
-            rules: vec![
-                RoutingRule {
-                    task_type: "code".to_string(),
-                    keywords: vec!["rust".to_string()],
-                    preferred_agents: vec!["rust-agent".to_string()],
-                    priority: 500,
-                    enabled: true,
-                },
-            ],
+            rules: vec![RoutingRule {
+                task_type: "code".to_string(),
+                keywords: vec!["rust".to_string()],
+                preferred_agents: vec!["rust-agent".to_string()],
+                priority: 500,
+                enabled: true,
+            }],
         };
 
         let router = AgentRouter::new(routing_config);
 
-        let agents = vec![
-            create_test_agent("rust-agent", vec!["code"], 1),
-        ];
+        let agents = vec![create_test_agent("rust-agent", vec!["code"], 1)];
 
         let agent_refs: Vec<&AgentConfig> = agents.iter().collect();
 
@@ -283,9 +298,8 @@ mod tests {
         assert_eq!(selected.id, "rust-agent");
 
         // Should NOT match without keyword
-        let result = router
-            .select_agent("code", "write python code", &agent_refs);
-        
+        let result = router.select_agent("code", "write python code", &agent_refs);
+
         // Falls back to priority
         assert!(result.is_ok());
     }

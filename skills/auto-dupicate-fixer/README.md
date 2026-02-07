@@ -1,75 +1,41 @@
-# Auto Duplicate File Fixer Skill
+# skills/auto-dupicate-fixer
+## 📌 Project Status (Feb 7, 2026)
 
-ตรวจจับและแก้ไขไฟล์ซ้ำในโปรเจค TypeScript, JavaScript, Python อย่างอัตโนมัติ
+Bl1nk Agents Manager is in active development and is not feature‑complete yet.
+This repo contains a working extension shell and a Rust core that is being
+brought to feature parity with existing TypeScript logic.
 
-## Quick Start
+**What works now**
+- Extension manifest and Gemini CLI scaffolding are present.
+- Core Rust modules exist for agents, hooks, MCP/ACP, sessions, and RPC.
+- Command and documentation sets are present (currently being refreshed).
 
-```bash
-# Check only (dry-run)
-npm run dry-run /path/to/project
+**In progress**
+- TypeScript → Rust parity for large subsystems (background agents, config,
+  ACP normalization).
+- End‑to‑end session flows for Gemini/Codex/Qwen within a unified adapter.
+- Validation of hook behavior and task orchestration across agents.
 
-# Daily fix (safe, incremental)
-npm run daily /path/to/project
+**Known gaps**
+- Some Rust modules compile but are not fully wired end‑to‑end.
+- Configuration loading/migration is still being aligned to actual runtime.
+- Authentication flows for some CLIs still require manual steps.
 
-# Aggressive fix (larger patches)
-npm run aggressive /path/to/project
-```
+**What to expect right now**
+- You can explore the architecture, commands, and agent catalogs.
+- Some workflows will still require manual setup or troubleshooting.
 
-## What It Does
+For a complete non‑developer overview, see `docs/PROJECT_STATUS.md`.
 
-1. **Detect**: หาไฟล์ซ้ำเหมือน, โค้ดซ้ำ, โครงสร้างซ้ำ
-2. **Decide**: เลือกไฟล์ไหนให้เก็บ อิงจาก test coverage > import count > type definitions
-3. **Refactor**: แก้ไข imports, ลบไฟล์ซ้ำ, อัพเดท barrel files
-4. **Validate**: รัน tests, lint, typecheck, build
-5. **Deploy**: สร้าง commit หรือ PR อัตโนมัติ
+Skill directory with SKILL.md and optional resources.
 
-## Configuration
+## Key Files
 
-Supports:
-- TypeScript (.ts, .tsx)
-- JavaScript (.js, .jsx)
-- Python (.py)
+- `IMPLEMENTATION_GUIDE.md`
+- `PERSONA.md`
+- `SKILL.md`
+- `package.json`
 
-## Outputs
+## Key Subdirectories
 
-- `.duplicate-report.json` - ผลจากการ detect
-- `.keep-remove-map.json` - decision mapping
-- `.refactor-log.json` - changes applied
-- `.validation-log.json` - test results
-- `.deploy-log.json` - deployment status
-- `.pipeline-log.json` - full execution log
-
-## Error Handling
-
-- Auto rollback on test failures
-- Dry-run mode to preview changes
-- Detailed error logs for debugging
-
-## Requirements
-
-- Node.js >= 16
-- jscpd (installed via npm)
-- git (for commits)
-- pytest (for Python projects)
-
-## Patterns
-
-### TS/JS Naming Convention
-```
-src/
-  utils/          # shared utilities
-  helpers/        # avoid! merge with utils
-  services/       # business logic
-  hooks/          # React hooks
-  components/     # UI components
-```
-
-### Python Pattern
-```
-src/
-  common/         # shared functions
-  core/           # core logic
-  utils.py        # avoid duplicate utils
-```
-
-Duplicates across directories get merged/removed automatically.
+- `scripts/`

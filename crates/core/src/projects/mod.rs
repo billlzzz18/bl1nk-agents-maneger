@@ -218,10 +218,10 @@ pub fn maybe_touch_updated_at(sha256: &str, throttle: &TouchThrottle) -> Result<
     let mut guard = throttle.inner.lock().unwrap();
     let last = guard.get(&root).copied();
     let now_inst = Instant::now();
-    if let Some(last_instant) = last
-        && now_inst.duration_since(last_instant) < throttle.min_interval
-    {
-        return Ok(());
+    if let Some(last_instant) = last {
+        if now_inst.duration_since(last_instant) < throttle.min_interval {
+            return Ok(());
+        }
     }
     guard.insert(root, now_inst);
     drop(guard);
@@ -736,12 +736,10 @@ mod tests {
 
         let result = read_project_metadata("test");
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Project not found")
-        );
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Project not found"));
     }
 
     #[test]
@@ -752,12 +750,10 @@ mod tests {
 
         let result = read_project_metadata("nonexistent");
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Project not found")
-        );
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Project not found"));
     }
 
     #[test]
@@ -767,7 +763,7 @@ mod tests {
         env_guard.set("HOME", temp_dir.path().to_str().unwrap());
 
         let valid_sha = "a".repeat(64); // Use 64-character hex string
-        // Create project directory and metadata file
+                                        // Create project directory and metadata file
         let projects_dir = temp_dir
             .path()
             .join(".gemini-cli-desktop/projects")
@@ -800,7 +796,7 @@ mod tests {
         env_guard.set("HOME", temp_dir.path().to_str().unwrap());
 
         let valid_sha = "a".repeat(64); // Use 64-character hex string
-        // Create project directory and invalid metadata file
+                                        // Create project directory and invalid metadata file
         let projects_dir = temp_dir
             .path()
             .join(".gemini-cli-desktop/projects")
@@ -825,12 +821,10 @@ mod tests {
         let metadata = ProjectMetadata::default();
         let result = write_project_metadata("test", &metadata);
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Project not found")
-        );
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Project not found"));
     }
 
     #[test]
@@ -914,7 +908,7 @@ mod tests {
         env_guard.set("HOME", temp_dir.path().to_str().unwrap());
 
         let valid_sha = "e".repeat(64); // Use 64-character hex string
-        // Create existing metadata
+                                        // Create existing metadata
         let metadata = ProjectMetadata {
             path: PathBuf::from("/existing/path"),
             sha256: Some(valid_sha.clone()),
@@ -962,12 +956,10 @@ mod tests {
 
         let result = ensure_project_metadata("nonexistent", None);
         assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Project not found")
-        );
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Project not found"));
     }
 
     #[test]
@@ -1016,7 +1008,7 @@ mod tests {
         env_guard.set("HOME", temp_dir.path().to_str().unwrap());
 
         let valid_sha = "b".repeat(64); // Use 64-character hex string
-        // Create project metadata with a path that works on both Windows and Unix
+                                        // Create project metadata with a path that works on both Windows and Unix
         let test_path = temp_dir.path().join("existing").join("path");
         let metadata = ProjectMetadata {
             path: test_path.clone(),

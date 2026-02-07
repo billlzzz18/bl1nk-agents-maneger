@@ -1,19 +1,23 @@
-use crate::config::{AgentConfig, RoutingConfig, RoutingTier};
-use crate::agents::{AgentRegistry, AgentRouter, register::{TaskInfo, TaskStatus}};
+use crate::agents::types::AgentConfig;
+use crate::agents::{
+    register::{TaskInfo, TaskStatus},
+    AgentRegistry, AgentRouter,
+};
+use crate::config::{RoutingConfig, RoutingTier};
 use crate::mcp::{DelegateTaskArgs, DelegateTaskOutput};
 use crate::rate_limit::RateLimitTracker;
-use anyhow::{Result, Context, bail};
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tokio::process::{Command, ChildStdin, ChildStdout};
-use tokio::io::{AsyncWriteExt, AsyncBufReadExt, BufReader};
+use anyhow::{bail, Context, Result};
 use serde_json::Value;
+use std::sync::Arc;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::process::{ChildStdin, ChildStdout, Command};
+use tokio::sync::RwLock;
 use uuid::Uuid;
 
-// Conditional Import for bundled pmat
 #[cfg(feature = "bundle-pmat")]
-use pmat_core::run_context_analysis; // สมมติว่า pmat-core มีฟังก์ชันนี้
-
+async fn run_context_analysis(_prompt: &str) -> Result<String> {
+    bail!("Bundled PMAT analysis is not available in this build.")
+}
 
 pub struct AgentExecutor {
     agent_registry: Arc<RwLock<AgentRegistry>>,
@@ -45,15 +49,17 @@ impl AgentExecutor {
         let registry = self.agent_registry.read().await;
 
         let agent_config = if let Some(agent_id) = &args.agent_id {
-            registry.get_agent(agent_id)
+            registry
+                .get_agent(agent_id)
                 .ok_or_else(|| pmcp::Error::validation(format!("Agent not found: {}", agent_id)))?
                 .clone()
         } else {
             // Auto-select based on task_type
             let all_agents = registry.get_agents_by_priority();
-            let agent_refs: Vec<&AgentConfig> = all_agents.iter().copied().collect();
+            let agent_refs: Vec<&AgentConfig> = all_agents.to_vec();
 
-            self.router.select_agent(&args.task_type, &args.prompt, &agent_refs)
+            self.router
+                .select_agent(&args.task_type, &args.prompt, &agent_refs)
                 .map_err(|e| pmcp::Error::internal(e.to_string()))?
                 .clone()
         };
@@ -75,10 +81,14 @@ impl AgentExecutor {
         // Check rate limit
         let mut rate_limiter = self.rate_limiter.write().await;
         // เราส่ง agent_config.rate_limit เข้าไปด้วย
-        if !rate_limiter.check_and_increment(&agent_id, &agent_config.rate_limit).await {
-            return Err(pmcp::Error::internal(
-                format!("Rate limit exceeded for agent: {}", agent_id)
-            ));
+        if !rate_limiter
+            .check_and_increment(&agent_id, &agent_config.rate_limit)
+            .await
+        {
+            return Err(pmcp::Error::internal(format!(
+                "Rate limit exceeded for agent: {}",
+                agent_id
+            )));
         }
         drop(rate_limiter);
 
@@ -92,12 +102,15 @@ impl AgentExecutor {
             let context_clone = args.context.clone();
 
             tokio::spawn(async move {
-                if let Err(e) = executor.execute_agent_task(
-                    task_id_clone,
-                    agent_config_clone,
-                    prompt_clone,
-                    context_clone,
-                ).await {
+                if let Err(e) = executor
+                    .execute_agent_task(
+                        task_id_clone,
+                        agent_config_clone,
+                        prompt_clone,
+                        context_clone,
+                    )
+                    .await
+                {
                     tracing::error!("Background task failed: {}", e);
                 }
             });
@@ -110,12 +123,10 @@ impl AgentExecutor {
             })
         } else {
             // Execute synchronously
-            let result = self.execute_agent_task(
-                task_id.clone(),
-                agent_config,
-                args.prompt,
-                args.context,
-            ).await.map_err(|e| pmcp::Error::internal(e.to_string()))?;
+            let result = self
+                .execute_agent_task(task_id.clone(), agent_config, args.prompt, args.context)
+                .await
+                .map_err(|e| pmcp::Error::internal(e.to_string()))?;
 
             Ok(DelegateTaskOutput {
                 task_id,
@@ -150,7 +161,7 @@ impl AgentExecutor {
                 } else {
                     bail!("Unsupported internal agent: {:?}", agent.command)
                 }
-            },
+            }
             _ => bail!("Unsupported agent type: {}", agent.agent_type),
         };
 
@@ -167,7 +178,7 @@ impl AgentExecutor {
     #[cfg(feature = "bundle-pmat")]
     async fn execute_internal_pmat_agent(&self, prompt: &str) -> Result<String> {
         tracing::debug!("Executing bundled PMAT agent with prompt: {}", prompt);
-        let result = run_context_analysis(prompt).await.map_err(|e| anyhow::anyhow!(e.to_string()))?;
+        let result = run_context_analysis(prompt).await?;
         Ok(result)
     }
 
@@ -182,7 +193,9 @@ impl AgentExecutor {
         prompt: &str,
         context: Option<Value>,
     ) -> Result<String> {
-        let command = agent.command.as_ref()
+        let command = agent
+            .command
+            .as_ref()
             .context("CLI agent requires command")?;
 
         tracing::debug!("Spawning process: {} {:?}", command, agent.args);
@@ -234,8 +247,8 @@ impl AgentExecutor {
 
         reader.read_line(&mut line).await?;
 
-        let response: Value = serde_json::from_str(&line)
-            .context("Failed to parse agent response")?;
+        let response: Value =
+            serde_json::from_str(&line).context("Failed to parse agent response")?;
 
         if let Some(result) = response.get("result") {
             if result.is_string() {
@@ -250,12 +263,10 @@ impl AgentExecutor {
         }
     }
 
-    async fn execute_gemini_extension(
-        &self,
-        agent: &AgentConfig,
-        prompt: &str,
-    ) -> Result<String> {
-        let extension_name = agent.extension_name.as_ref()
+    async fn execute_gemini_extension(&self, agent: &AgentConfig, _prompt: &str) -> Result<String> {
+        let extension_name = agent
+            .extension_name
+            .as_ref()
             .context("Extension agent requires extension_name")?;
 
         tracing::info!("Calling Gemini extension: {}", extension_name);
@@ -266,7 +277,10 @@ impl AgentExecutor {
         Self {
             agent_registry: self.agent_registry.clone(),
             rate_limiter: self.rate_limiter.clone(),
-            router: AgentRouter::new(RoutingConfig { rules: vec![], tier: RoutingTier::Default }),
+            router: AgentRouter::new(RoutingConfig {
+                rules: vec![],
+                tier: RoutingTier::Default,
+            }),
         }
     }
 }
