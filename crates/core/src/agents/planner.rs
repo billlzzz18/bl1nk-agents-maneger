@@ -1240,4 +1240,3 @@ fn create_agent_tool_restrictions(restricted_tools: &[&str]) -> AgentConfig {
         ..Default::default()
     }
 }
-```
