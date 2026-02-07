@@ -5,9 +5,9 @@ use regex::Regex;
 // Mocking shared data path function
 fn get_opencode_storage_dir() -> PathBuf {
     if let Ok(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")) {
-        PathBuf::from(home).join(".opencode")
+        PathBuf::from(home).join(".bl1nk")
     } else {
-        PathBuf::from("/tmp/.opencode")
+        PathBuf::from("/tmp/.bl1nk")
     }
 }
 

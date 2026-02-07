@@ -8,7 +8,7 @@ use chrono::Utc;
 use crate::hooks::claude_code_hooks::types::{TodoFile, TodoItem, ClaudeCodeTodoItem};
 
 // ไดเรกทอรีสำหรับจัดเก็บไฟล์ todo
-static TODO_DIR: &str = ".opencode/todos";
+static TODO_DIR: &str = ".bl1nk/todos";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenCodeTodo {

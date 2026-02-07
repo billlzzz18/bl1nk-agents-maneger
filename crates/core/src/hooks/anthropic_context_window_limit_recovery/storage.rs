@@ -90,7 +90,7 @@ fn get_opencode_storage_dir() -> String {
     if cfg!(windows) {
         std::env::var("APPDATA").unwrap_or_else(|_| "/tmp".to_string())
     } else {
-        std::env::var("HOME").map(|h| format!("{}/.opencode", h)).unwrap_or_else(|_| "/tmp/.opencode".to_string())
+        std::env::var("HOME").map(|h| format!("{}/.bl1nk", h)).unwrap_or_else(|_| "/tmp/.bl1nk".to_string())
     }
 }
 
@@ -119,7 +119,7 @@ pub async fn find_tool_results_by_size(session_id: &str) -> Vec<ToolResultInfo> 
     let mut results = Vec::new();
 
     for message_id in message_ids {
-        let part_dir = format!(".opencode/part/{}", message_id); // ใช้ path จำลอง
+        let part_dir = format!(".bl1nk/part/{}", message_id); // ใช้ path จำลอง
         if !std::path::Path::new(&part_dir).exists() {
             continue;
         }
@@ -214,7 +214,7 @@ pub async fn count_truncated_results(session_id: &str) -> usize {
     let mut count = 0;
 
     for message_id in message_ids {
-        let part_dir = format!(".opencode/part/{}", message_id); // ใช้ path จำลอง
+        let part_dir = format!(".bl1nk/part/{}", message_id); // ใช้ path จำลอง
         if !std::path::Path::new(&part_dir).exists() {
             continue;
         }

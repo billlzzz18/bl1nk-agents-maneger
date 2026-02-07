@@ -38,11 +38,11 @@ lazy_static::lazy_static! {
         Arc::new(RwLock::new(HashMap::new()));
 }
 
-const USER_CONFIG_PATH: &str = ".opencode/opencode-cc-plugin.json";
+const USER_CONFIG_PATH: &str = ".bl1nk/opencode-cc-plugin.json";
 
 fn get_project_config_path() -> String {
     // ใช้ current working directory ร่วมกับ path ของ config
-    format!("{}/.opencode/opencode-cc-plugin.json", std::env::current_dir()
+    format!("{}/.bl1nk/opencode-cc-plugin.json", std::env::current_dir()
         .unwrap_or_else(|_| PathBuf::from("."))
         .to_string_lossy())
 }

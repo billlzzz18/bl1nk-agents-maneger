@@ -10,7 +10,7 @@ use chrono::Utc;
 use crate::hooks::claude_code_hooks::types::TranscriptEntry;
 
 // ไดเรกทอรีสำหรับจัดเก็บ transcript
-static TRANSCRIPT_DIR: &str = ".opencode/transcripts";
+static TRANSCRIPT_DIR: &str = ".bl1nk/transcripts";
 
 pub fn get_transcript_path(session_id: &str) -> String {
     format!("{}/{}.jsonl", TRANSCRIPT_DIR, session_id)

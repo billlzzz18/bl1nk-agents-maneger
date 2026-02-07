@@ -6,7 +6,7 @@ pub fn get_opencode_storage_dir() -> String {
     if cfg!(windows) {
         std::env::var("APPDATA").unwrap_or_else(|_| "/tmp".to_string())
     } else {
-        std::env::var("HOME").map(|h| format!("{}/.opencode", h)).unwrap_or_else(|_| "/tmp/.opencode".to_string())
+        std::env::var("HOME").map(|h| format!("{}/.bl1nk", h)).unwrap_or_else(|_| "/tmp/.bl1nk".to_string())
     }
 }
 

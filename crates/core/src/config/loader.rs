@@ -34,12 +34,12 @@ pub fn get_opencode_config_dir() -> PathBuf {
         return PathBuf::from(dir);
     }
     if let Ok(home) = std::env::var("HOME") {
-        return PathBuf::from(home).join(".opencode");
+        return PathBuf::from(home).join(".bl1nk");
     }
     if let Ok(home) = std::env::var("USERPROFILE") {
-        return PathBuf::from(home).join(".opencode");
+        return PathBuf::from(home).join(".bl1nk");
     }
-    PathBuf::from(".opencode")
+    PathBuf::from(".bl1nk")
 }
 
 pub fn detect_config_file(base_path: &Path) -> DetectedConfigFile {
@@ -287,7 +287,7 @@ pub fn load_plugin_config(directory: &Path) -> (Bl1nkConfig, ConfigLoadContext) 
         user_base_path.with_extension("json")
     };
 
-    let project_base_path = directory.join(".opencode").join("bl1nk");
+    let project_base_path = directory.join(".bl1nk").join("bl1nk");
     let project_detected = detect_config_file(&project_base_path);
     let project_config_path = if project_detected.format != ConfigFormat::None {
         project_detected.path

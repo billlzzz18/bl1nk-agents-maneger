@@ -103,7 +103,7 @@ fn get_message_dir(session_id: &str) -> Option<String> {
 
 fn get_message_storage_path() -> String {
     // ใช้ path จำลองสำหรับการพัฒนา
-    ".opencode/message".to_string()
+    ".bl1nk/message".to_string()
 }
 
 async fn read_messages(session_id: &str) -> Vec<MessagePart> {
