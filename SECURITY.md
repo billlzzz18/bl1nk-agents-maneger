@@ -2,20 +2,84 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+The following versions of Bl1nk Agents Manager are currently supported with security updates:
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Version | Supported |
+|---------|-----------|
+| 0.2.x   | ✅ Yes    |
+| 0.1.x   | ✅ Yes    |
+| < 0.1   | ❌ No     |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+We take security seriously. If you believe you have found a security vulnerability in Bl1nk Agents Manager, please report it responsibly.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+### How to Report
+
+1. **Do not** open a public issue on GitHub
+2. Email your report to: [security@bl1nk.site](mailto:security@bl1nk.site)
+3. Include a detailed description of the vulnerability
+4. Include steps to reproduce the issue
+5. Include any relevant screenshots or logs
+
+### What to Expect
+
+- We will acknowledge your report within 48 hours
+- We will provide an initial assessment within 7 days
+- We will keep you updated on progress
+- We will not disclose the vulnerability publicly until a fix is released
+
+## Security Best Practices
+
+### Agent Sandboxing
+
+- Agents run in isolated processes
+- No shared memory between agents
+- Clean shutdown on errors
+
+### Input Validation
+
+- JSON Schema validation for all MCP requests
+- Path validation to prevent directory traversal
+- Command whitelisting for agent execution
+
+### Rate Limiting
+
+- Per-agent request limits (60 requests/minute, 2000 requests/day)
+- Configurable rate limits
+- Automatic reset timers
+
+### Data Privacy
+
+- Local processing by default
+- No data sent to external servers (except user-configured model providers)
+- Conversation history stored locally
+
+## Security Considerations
+
+### Agent Trust
+
+- Only use agents from trusted sources
+- Review agent prompts before use
+- Agents have access to filesystem based on user permissions
+
+### Configuration
+
+- Review configuration before deployment
+- Use least privilege principles for agent permissions
+- Regularly update to latest version
+
+### Dependencies
+
+- All dependencies are reviewed for security
+- Rust crates are audited for known vulnerabilities
+- Keep dependencies updated
+
+## Related Security Resources
+
+- [OWASP AI Security](https://owasp.org/www-project-ai-security/)
+- [Model Context Protocol Security](https://modelcontextprotocol.io/)
+
+---
+
+Thank you for helping us keep Bl1nk secure!

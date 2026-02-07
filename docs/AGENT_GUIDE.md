@@ -1,428 +1,267 @@
-# Creating ACP-Compatible Agents
+# Creating Bl1nk-Compatible Agents
 
-This guide shows how to create agents that work with Gemini MCP Proxy.
+This guide explains how to create agents compatible with Bl1nk Agents Manager.
 
 ## Agent Requirements
 
-### 1. JSON-RPC 2.0 Protocol
+### 1. Agent File Format
 
-Agents must communicate via JSON-RPC 2.0 over stdin/stdout:
+Agents are defined as Markdown files with YAML frontmatter:
 
-**Request Format:**
+```markdown
+---
+id: my-agent
+name: My Agent
+description: Use this agent when users need specific functionality
+category: utility
+color: blue
+tools:
+  - Write
+  - Read
+---
+
+Your system prompt goes here...
+```
+
+### 2. YAML Frontmatter
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `id` | Yes | Unique identifier (lowercase, hyphens) |
+| `name` | Yes | Display name |
+| `description` | Yes | Trigger conditions and use cases |
+| `category` | Yes | Category: engineering, creative, utility, entertainment |
+| `color` | No | UI color (blue, green, yellow, red, magenta) |
+| `tools` | No | List of available tools |
+
+### 3. System Prompt
+
+The system prompt defines the agent's behavior:
+
+```markdown
+You are an expert [domain]...
+
+## Core Responsibilities
+
+1. [Responsibility 1]
+2. [Responsibility 2]
+3. [Responsibility 3]
+
+## Process
+
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+## Output Format
+
+Your output should include...
+```
+
+## Example: Creating a Code Review Agent
+
+### Step 1: Create Agent File
+
+Create `agents/code-reviewer.md`:
+
+```markdown
+---
+id: code-reviewer
+name: Code Reviewer
+description: |
+  Use this agent when the user asks to review code, check for bugs,
+  or analyze code quality. Also trigger for: "review this PR",
+  "check for security issues", "analyze this code".
+category: engineering
+color: red
+tools:
+  - Read
+  - Glob
+  - Grep
+---
+
+You are an elite code reviewer specializing in finding bugs, security vulnerabilities, and code quality issues.
+
+## Core Responsibilities
+
+1. **Analyze code** for potential bugs and logic errors
+2. **Identify security vulnerabilities** (SQL injection, XSS, etc.)
+3. **Check code quality** (naming, structure, comments)
+4. **Verify adherence** to project conventions
+
+## Process
+
+1. Read and understand the code changes
+2. Analyze for bugs and edge cases
+3. Check for security issues
+4. Verify code quality
+5. Provide actionable recommendations
+
+## Output Format
+
+Provide your review in this format:
+
+### Summary
+[Brief overview of changes]
+
+### Critical Issues
+| Severity | File | Line | Issue | Recommendation |
+|----------|------|------|-------|----------------|
+| High | src/main.rs | 42 | SQL injection | Use parameterized queries |
+
+### Suggestions
+[List of improvement suggestions]
+
+### Positive Aspects
+[What was done well]
+```
+
+### Step 2: Register Agent
+
+Add to `agents/agents.json`:
+
 ```json
 {
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "tools/call",
-  "params": {
-    "name": "execute_task",
-    "arguments": {
-      "prompt": "User's instruction",
-      "context": {}
-    }
-  }
+  "id": "code-reviewer",
+  "name": "Code Reviewer",
+  "file": "code-reviewer.md",
+  "category": "engineering",
+  "description": "Reviews code for bugs, security issues, and code quality"
 }
 ```
 
-**Response Format:**
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": "Agent's response here"
-}
+### Step 3: Validate Agent
+
+```bash
+just validate-agents
 ```
 
-**Error Format:**
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "error": {
-    "code": -32000,
-    "message": "Error description"
-  }
-}
+## Agent Categories
+
+| Category | Description | Color |
+| --- | --- | --- |
+| `engineering` | Software development | blue |
+| `creative` | Writing and creative | green |
+| `utility` | Tools and utilities | yellow |
+| `entertainment` | Fun and humor | magenta |
+
+## Trigger Examples
+
+Include trigger examples in the description:
+
+```markdown
+description: |
+  Use this agent when the user asks to [action].
+  Also trigger for: "[phrase1]", "[phrase2]", "[phrase3]"
+
+  Examples:
+  - User: "Review this code"
+  - User: "Check for security issues"
+  - User: "Analyze this PR"
 ```
 
-### 2. stdin/stdout Communication
+## Best Practices
 
-- Read requests from **stdin** (one JSON per line)
-- Write responses to **stdout** (one JSON per line)
-- Write logs to **stderr** (optional)
+### 1. Clear Responsibilities
 
-### 3. Exit Cleanly
+Define specific, focused responsibilities:
 
-- Exit with code 0 on success
-- Exit with non-zero on error
-- Flush stdout before exit
+```markdown
+## Core Responsibilities
 
-## Example Agents
-
-### Python Agent (Minimal)
-
-```python
-#!/usr/bin/env python3
-import json
-import sys
-
-def handle_request(request):
-    """Process JSON-RPC request"""
-    method = request.get("method")
-    params = request.get("params", {})
-    
-    if method == "tools/call":
-        tool_name = params.get("name")
-        args = params.get("arguments", {})
-        
-        if tool_name == "execute_task":
-            prompt = args.get("prompt", "")
-            # Do work here
-            result = f"Processed: {prompt}"
-            
-            return {
-                "jsonrpc": "2.0",
-                "id": request.get("id"),
-                "result": result
-            }
-    
-    return {
-        "jsonrpc": "2.0",
-        "id": request.get("id"),
-        "error": {
-            "code": -32601,
-            "message": "Method not found"
-        }
-    }
-
-def main():
-    for line in sys.stdin:
-        try:
-            request = json.loads(line)
-            response = handle_request(request)
-            print(json.dumps(response), flush=True)
-        except Exception as e:
-            error_response = {
-                "jsonrpc": "2.0",
-                "id": None,
-                "error": {
-                    "code": -32603,
-                    "message": str(e)
-                }
-            }
-            print(json.dumps(error_response), flush=True)
-            sys.exit(1)
-
-if __name__ == "__main__":
-    main()
+1. Only review code for bugs and security
+2. Do NOT suggest architectural changes (use architect agent)
+3. Do NOT write code (use code-generator agent)
 ```
 
-### Rust Agent (Using PMCP)
+### 2. Process Steps
 
-```rust
-use pmcp::{ServerBuilder, TypedTool, RequestHandlerExtra};
-use serde::{Deserialize, Serialize};
-use schemars::JsonSchema;
+Provide clear step-by-step process:
 
-#[derive(Debug, Deserialize, JsonSchema)]
-struct TaskArgs {
-    prompt: String,
-    context: Option<serde_json::Value>,
-}
+```markdown
+## Process
 
-async fn execute_task(
-    args: TaskArgs,
-    _extra: RequestHandlerExtra
-) -> pmcp::Result<String> {
-    // Process the task
-    Ok(format!("Processed: {}", args.prompt))
-}
-
-#[tokio::main]
-async fn main() -> pmcp::Result<()> {
-    let server = ServerBuilder::new()
-        .name("my-agent")
-        .version("1.0.0")
-        .tool("execute_task", TypedTool::new(
-            "execute_task",
-            |args, extra| Box::pin(execute_task(args, extra))
-        ))
-        .build()?;
-    
-    server.run_stdio().await?;
-    Ok(())
-}
+1. Read the changed files
+2. Run static analysis tools
+3. Check for common vulnerabilities
+4. Review against project standards
+5. Compile findings into report
 ```
 
-### Node.js Agent
+### 3. Output Format
 
-```javascript
-#!/usr/bin/env node
-const readline = require('readline');
+Define consistent output format:
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  terminal: false
-});
+```markdown
+## Output Format
 
-rl.on('line', (line) => {
-  try {
-    const request = JSON.parse(line);
-    const response = handleRequest(request);
-    console.log(JSON.stringify(response));
-  } catch (error) {
-    console.error(JSON.stringify({
-      jsonrpc: "2.0",
-      id: null,
-      error: {
-        code: -32603,
-        message: error.message
-      }
-    }));
-    process.exit(1);
-  }
-});
+Your review should include:
+- Summary (2-3 sentences)
+- Critical Issues (if any)
+- Suggestions (prioritized)
+- Positive Aspects (at least one)
+```
 
-function handleRequest(request) {
-  const { method, params, id } = request;
-  
-  if (method === 'tools/call' && params.name === 'execute_task') {
-    const { prompt } = params.arguments;
-    return {
-      jsonrpc: "2.0",
-      id,
-      result: `Processed: ${prompt}`
-    };
-  }
-  
-  return {
-    jsonrpc: "2.0",
-    id,
-    error: {
-      code: -32601,
-      message: "Method not found"
-    }
-  };
-}
+### 4. Examples
+
+Add example blocks:
+
+```markdown
+<example>
+Context: User wants a quick review
+user: "Quick review of my latest commit"
+assistant: "I'll use the code-reviewer agent to analyze your changes."
+</example>
 ```
 
 ## Testing Your Agent
 
 ### Manual Test
 
+1. Add agent to `agents/agents.json`
+2. Run `/system-agent` to verify it appears
+3. Use `/system-agent:info <agent-id>` to verify metadata
+4. Test with real task
+
+### Integration Test
+
 ```bash
-# Test stdin/stdout communication
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"execute_task","arguments":{"prompt":"test"}}}' | ./my-agent
-```
-
-Expected output:
-```json
-{"jsonrpc":"2.0","id":1,"result":"Processed: test"}
-```
-
-### Integration with Proxy
-
-1. Add agent to config:
-```toml
-[[agents]]
-id = "my-agent"
-name = "My Custom Agent"
-type = "cli"
-command = "/path/to/my-agent"
-rate_limit = { requests_per_minute = 60, requests_per_day = 2000 }
-capabilities = ["custom-task"]
-priority = 1
-```
-
-2. Add routing rule:
-```toml
-[[routing.rules]]
-task_type = "custom-task"
-keywords = ["custom"]
-preferred_agents = ["my-agent"]
-```
-
-3. Test delegation:
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "tools/call",
-  "params": {
-    "name": "delegate_task",
-    "arguments": {
-      "task_type": "custom-task",
-      "prompt": "Do custom work",
-      "agent_id": "my-agent"
-    }
-  }
-}
-```
-
-## Best Practices
-
-### 1. Error Handling
-
-Always catch exceptions and return proper JSON-RPC errors:
-
-```python
-try:
-    result = process_task(prompt)
-    return {"jsonrpc": "2.0", "id": req_id, "result": result}
-except ValueError as e:
-    return {
-        "jsonrpc": "2.0",
-        "id": req_id,
-        "error": {"code": -32602, "message": str(e)}
-    }
-```
-
-### 2. Logging
-
-Write logs to stderr, not stdout:
-
-```python
-import sys
-
-def log(message):
-    print(f"[Agent] {message}", file=sys.stderr, flush=True)
-
-log("Processing request...")
-```
-
-### 3. Flush Output
-
-Always flush stdout after writing response:
-
-```python
-print(json.dumps(response), flush=True)
-```
-
-```javascript
-console.log(JSON.stringify(response)); // Automatically flushes
-```
-
-```rust
-println!("{}", serde_json::to_string(&response)?);
-// stdout auto-flushes on newline
-```
-
-### 4. Timeout Handling
-
-Handle long-running tasks:
-
-```python
-import signal
-
-def timeout_handler(signum, frame):
-    raise TimeoutError("Task timed out")
-
-signal.signal(signal.SIGALRM, timeout_handler)
-signal.alarm(300)  # 5 minute timeout
-
-try:
-    result = long_running_task()
-    signal.alarm(0)  # Cancel alarm
-except TimeoutError:
-    return error_response("Task timed out after 5 minutes")
-```
-
-### 5. Rate Limit Reporting
-
-Include rate limit info in responses (optional):
-
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": "...",
-  "meta": {
-    "rate_limit": {
-      "remaining_today": 1950,
-      "remaining_minute": 55
-    }
-  }
-}
+# Test agent delegation
+gemini-cli> "Use code-reviewer to review src/main.rs"
 ```
 
 ## Common Issues
 
-### Issue: Agent hangs
+### Issue: Agent not appearing
 
-**Cause**: Not flushing stdout
-**Fix**: Add `flush=True` or call `sys.stdout.flush()`
+**Cause**: Missing from `agents.json`
+**Fix**: Add agent to the JSON registry
 
-### Issue: JSON parse error
+### Issue: Wrong agent selected
 
-**Cause**: Multiple JSONs on one line
-**Fix**: One JSON per line, terminated with `\n`
+**Cause**: Description doesn't match user query
+**Fix**: Update description with better trigger phrases
 
-### Issue: Agent exits immediately
+### Issue: Agent behaving unexpectedly
 
-**Cause**: Reading all stdin at once
-**Fix**: Read line-by-line in a loop
+**Cause**: System prompt too vague
+**Fix**: Add clear responsibilities and constraints
 
-### Issue: Garbled output
-
-**Cause**: Mixing stdout/stderr
-**Fix**: Only write JSON to stdout, logs to stderr
-
-## Advanced Features
-
-### Streaming Responses
-
-For long-running tasks, send progress updates:
-
-```python
-def stream_progress(task_id):
-    for i in range(100):
-        progress = {
-            "jsonrpc": "2.0",
-            "method": "progress",
-            "params": {
-                "task_id": task_id,
-                "percent": i
-            }
-        }
-        print(json.dumps(progress), flush=True)
-        time.sleep(0.1)
-```
-
-### Context Passing
-
-Use context for state:
-
-```python
-def handle_with_context(request):
-    context = request["params"]["arguments"].get("context", {})
-    previous_result = context.get("previous_result")
-    
-    # Use previous result
-    new_result = process(previous_result)
-    
-    return {
-        "result": new_result,
-        "context": {
-            "previous_result": new_result
-        }
-    }
-```
+---
 
 ## Agent Checklist
 
 Before deploying:
 
-- [ ] Implements JSON-RPC 2.0 protocol
-- [ ] Reads from stdin, writes to stdout
-- [ ] Flushes output after each response
-- [ ] Handles errors gracefully
-- [ ] Logs to stderr (not stdout)
-- [ ] Exits cleanly (code 0 on success)
-- [ ] Tested manually with echo/pipe
-- [ ] Added to proxy config
-- [ ] Tested via proxy delegation
+- [ ] YAML frontmatter complete (id, name, description, category)
+- [ ] System prompt has clear responsibilities
+- [ ] Process steps are defined
+- [ ] Output format is specified
+- [ ] Trigger examples included
+- [ ] Added to `agents/agents.json`
+- [ ] Validated with `just validate-agents`
+- [ ] Tested with real task
 
 ---
 
-**Need help?** Check examples in `/examples` directory or open an issue.
+**Need help?** Check existing agents in `agents/` directory or open an issue.

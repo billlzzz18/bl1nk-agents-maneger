@@ -1,4 +1,8 @@
 description = "Create and register a new system agent based on your description"
+tags = ["command", "low-complexity", "management", "creation", "code"]
+complexity = "low"
+category = "command"
+outputs = ["code", "documentation"]
 prompt = """
 Task: Create a new system agent based on the user's description: "{{args}}".
 

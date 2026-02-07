@@ -1,4 +1,8 @@
 description = "Show example prompts and use cases for agents"
+tags = ["command", "low-complexity", "management", "exploration", "guidance"]
+complexity = "low"
+category = "command"
+outputs = ["guidance", "text"]
 prompt = """
 First, read the system agent registry file using `run_shell_command` with `cat ${extensionPath}/agents/agents.json`. **Do not use `read_file`.**
 

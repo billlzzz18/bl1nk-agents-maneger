@@ -18,187 +18,163 @@ cargo --version
 
 ```bash
 # Navigate to project directory
-cd gemini-mcp-proxy
+cd bl1nk-agents-manager
 
-# Install development tools (optional)
-make setup
+# Install development tools
+just setup
 
 # Build the project
-make build
+just build
 ```
 
-### Step 3: Configuration
+### Step 3: Test Installation
 
 ```bash
-# Create config directory
-mkdir -p ~/.config/gemini-mcp-proxy
+# Verify the binary was built
+./target/release/bl1nk-server --help
 
-# Copy and customize config
-cp config.example.toml ~/.config/gemini-mcp-proxy/config.toml
-
-# Edit config to add your agents
-nano ~/.config/gemini-mcp-proxy/config.toml
+# Or run the server
+just run
 ```
 
-**Minimal working config:**
+### Step 4: Validate Agents
+
+```bash
+# Validate all agent definitions
+just validate-agents
+
+# If issues found, fix them
+just fix-agents
+```
+
+---
+
+## 📖 First Steps
+
+### List Available Agents
+
+```bash
+/system-agent
+```
+
+This shows all 48+ available agents.
+
+### Get Agent Information
+
+```bash
+/system-agent:info architect
+```
+
+### Switch to an Agent
+
+```bash
+/system-agent:switch architect
+```
+
+This generates the command to set the environment variable.
+
+---
+
+## 🧩 Using Agents
+
+### Delegate a Task
+
+From within Gemini CLI:
+
+```markdown
+User: "Use the architect agent to design a web API"
+Claude: [Routes to architect agent and returns design]
+```
+
+### Direct Agent Usage
+
+```markdown
+User: "@code-generator Write a Rust function for fibonacci"
+Claude: [Code generator responds with code]
+```
+
+---
+
+## 🔧 Configuration
+
+### Create Config Directory
+
+```bash
+mkdir -p ~/.config/bl1nk
+```
+
+### Customize Configuration
+
+Edit `config/Config.toml`:
 
 ```toml
 [server]
 host = "127.0.0.1"
 port = 3000
-max_concurrent_tasks = 5
 
 [main_agent]
 name = "gemini"
-type = "gemini-cli"
 
 [[agents]]
-id = "test-agent"
-name = "Test Agent"
-type = "cli"
-command = "echo"
-args = ["Hello from agent"]
-rate_limit = { requests_per_minute = 60, requests_per_day = 2000 }
-capabilities = ["test"]
-priority = 1
+id = "architect"
+name = "Architect"
+category = "engineering"
 
-[routing]
-rules = []
-
-[rate_limiting]
-strategy = "round-robin"
-track_usage = true
-usage_db_path = "~/.config/gemini-mcp-proxy/usage.db"
-
-[logging]
-level = "info"
-output = "stdout"
+[[routing.rules]]
+task_type = "code-generation"
+preferred_agents = ["code-generator"]
 ```
 
-### Step 4: Run the Server
+---
+
+## 🧪 Testing
+
+### Run All Tests
 
 ```bash
-# Run in development mode
-make run
-
-# Or with debug logging
-RUST_LOG=debug cargo run --release
+just test
 ```
 
-Expected output:
-```
-2025-01-28T00:00:00Z INFO  Starting Gemini MCP/ACP Orchestrator
-2025-01-28T00:00:00Z INFO  Loaded configuration with 1 agents
-2025-01-28T00:00:00Z INFO  Starting MCP server on stdio
-```
-
-### Step 5: Test with MCP Client
-
-Create a test script `test-client.sh`:
+### Test Specific Component
 
 ```bash
-#!/bin/bash
+# Test agent registry
+cargo test --package bl1nk-core agents
 
-# Send MCP initialize request
-cat << 'EOF' | ./target/release/gemini-mcp-proxy
-{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}
-EOF
+# Test hooks
+cargo test --package bl1nk-core hooks
+
+# Test MCP
+cargo test --package bl1nk-core mcp
 ```
 
-Run test:
-```bash
-chmod +x test-client.sh
-./test-client.sh
-```
+---
 
-## Common Use Cases
+## 📚 Learning Resources
 
-### Use Case 1: Delegate Task to Agent
+### Documentation
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 2,
-  "method": "tools/call",
-  "params": {
-    "name": "delegate_task",
-    "arguments": {
-      "task_type": "test",
-      "prompt": "Hello, agent!",
-      "background": false
-    }
-  }
-}
-```
+| Topic | Link |
+|-------|------|
+| Architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) |
+| Agent Guide | [AGENT_GUIDE.md](./AGENT_GUIDE.md) |
+| API Reference | [API.md](../API.md) |
+| Project Summary | [PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md) |
 
-### Use Case 2: Check Agent Status
+### Example Agents
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 3,
-  "method": "tools/call",
-  "params": {
-    "name": "agent_status",
-    "arguments": {}
-  }
-}
-```
+Check these agents to understand the format:
 
-### Use Case 3: Background Task
+- `agents/architect.md` - Engineering agent
+- `agents/code-generator.md` - Code generation
+- `agents/pirate.md` - Entertainment agent
+- `agents/agent-creator.md` - Utility agent
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 4,
-  "method": "tools/call",
-  "params": {
-    "name": "delegate_task",
-    "arguments": {
-      "task_type": "background-task",
-      "prompt": "npm install dependencies",
-      "background": true
-    }
-  }
-}
-```
+---
 
-## Integration with Gemini CLI
+## 🐛 Common Issues
 
-### Option 1: Direct stdio
-
-```bash
-# Run as MCP server
-gemini-mcp-proxy
-
-# Gemini CLI connects via stdio
-```
-
-### Option 2: MCP Config
-
-Add to Gemini CLI configuration (e.g., `~/.config/gemini-cli/mcp.json`):
-
-```json
-{
-  "mcpServers": {
-    "gemini-proxy": {
-      "command": "/path/to/gemini-mcp-proxy",
-      "args": [],
-      "transport": "stdio"
-    }
-  }
-}
-```
-
-Then use from Gemini:
-```
-User: "Use gemini-proxy to delegate this task to qwen-coder"
-Gemini: [calls delegate_task via MCP]
-```
-
-## Troubleshooting
-
-### Error: "cargo: not found"
+### Issue: "cargo: not found"
 
 ```bash
 # Install Rust
@@ -206,64 +182,111 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
 ```
 
-### Error: "No config file found"
+### Issue: Agent not appearing
 
 ```bash
-# Create config
-mkdir -p ~/.config/gemini-mcp-proxy
-cp config.example.toml ~/.config/gemini-mcp-proxy/config.toml
+# Validate agents
+just validate-agents
+
+# Check agents.json
+cat agents/agents.json | jq '.agents | length'
 ```
 
-### Error: "Agent command not found"
+### Issue: Build fails
 
-Check:
-1. Command exists: `which qwencode`
-2. Command is executable: `chmod +x /path/to/qwencode`
-3. PATH is correct: `echo $PATH`
-
-### Error: "Rate limit exceeded"
-
-Reset usage database:
 ```bash
-rm ~/.config/gemini-mcp-proxy/usage.db
+# Clean and rebuild
+just clean
+just build
+
+# Check Rust version
+rustc --version
 ```
 
-## Next Steps
-
-1. **Read Architecture**: See `ARCHITECTURE.md` for design details
-2. **Add Real Agents**: Configure actual CLI agents (qwencode, codex, etc.)
-3. **Customize Routing**: Add routing rules in config
-4. **Deploy**: Use `make install` to install system-wide
-
-## Development Workflow
+### Issue: MCP connection failed
 
 ```bash
-# 1. Make changes to src/
+# Verify server is running
+./target/release/bl1nk-server --help
+
+# Check port
+netstat -tulpn | grep 3000
+```
+
+---
+
+## 🚀 Next Steps
+
+### 1. Explore Agents
+
+Run `/system-agent` to see all available agents.
+
+### 2. Create Custom Agent
+
+```bash
+/system-agent:new
+```
+
+Follow the interactive wizard.
+
+### 3. Add Hooks
+
+Create a new hook in `crates/core/src/hooks/`.
+
+### 4. Integrate with Claude CLI
+
+Add to your Claude CLI config:
+
+```json
+{
+  "mcpServers": {
+    "bl1nk": {
+      "command": "/path/to/bl1nk-server",
+      "transport": "stdio"
+    }
+  }
+}
+```
+
+---
+
+## 📝 Development Workflow
+
+```bash
+# 1. Make changes
 # 2. Format code
-make fmt
+just fmt
 
 # 3. Check for errors
-make check
+just check
 
 # 4. Run tests
-make test
+just test
 
-# 5. Run clippy
-make clippy
+# 5. Run linter
+just clippy
 
 # 6. Build release
-make build
+just build
 ```
 
-## Resources
+---
 
-- **README.md** - Comprehensive documentation
-- **ARCHITECTURE.md** - System design and internals
-- **config.example.toml** - Full config example
-- **Makefile** - Development commands
+## 🎯 Quick Reference
+
+| Command | Description |
+|---------|-------------|
+| `just build` | Build release binary |
+| `just run` | Run server |
+| `just dev` | Hot-reload development |
+| `just test` | Run all tests |
+| `just fmt` | Format code |
+| `just clippy` | Run linter |
+| `just validate-agents` | Validate agent files |
+| `just fix-agents` | Fix agent issues |
 
 ---
 
 **Ready to go!** 🎉
 
-For questions or issues, check the README or open an issue.
+For questions, check the documentation or open an issue.

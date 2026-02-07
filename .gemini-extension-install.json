@@ -1,8 +1,0 @@
-{
-  "id": "bl1nk-agents",
-  "name": "System Agents Manager",
-  "version": "0.2.0",
-  "source": "https://github.com/billlzzz18/bl1nk-agents-manager",
-  "description": "Turn your Gemini CLI into a Multi-Persona AI Team.",
-  "type": "git"
-}

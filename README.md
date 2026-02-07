@@ -1,28 +1,24 @@
-# 🤖 Gemini Agents Manager Extension
+# 🤖 Bl1nk Agents Manager
 
 ![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
-![Python](https://img.shields.io/badge/python-3.8+-yellow.svg)
+![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)
 
-> **Turn your Gemini CLI into a Multi-Persona AI Team.**
+> **A sophisticated multi-agent orchestration system with 48+ specialized agents for Gemini CLI**
 
-This extension transforms the generic Gemini CLI assistant into a specialized workforce. It allows you to manage, switch, and maintain a library of **"System Agents"**—specialized system prompts designed for specific domains like Architecture, Coding, Writing, or Entertainment.
-
-By swapping the underlying persona, you ensure that the AI follows strict behavioral rules, output formats, and domain-specific best practices, significantly reducing hallucinations and improving task performance.
+Bl1nk Agents Manager transforms the generic Gemini CLI assistant into a specialized workforce of AI agents. It provides a comprehensive system for managing, switching, and maintaining a library of **System Agents**—specialized prompts designed for specific domains like Architecture, Coding, Writing, Research, and more.
 
 ---
 
 ## 📖 Table of Contents
 
 - [Features](#-features)
-- [Installation](#-installation)
 - [Quick Start](#-quick-start)
 - [Available Agents](#-available-agents)
-- [Core Agent Profiles](#-core-agent-profiles)
-- [Configuration](#-configuration)
+- [Architecture](#-architecture)
+- [Hooks System](#-hooks-system)
 - [Development](#-development)
-- [Troubleshooting](#-troubleshooting)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -30,154 +26,300 @@ By swapping the underlying persona, you ensure that the AI follows strict behavi
 
 ## ✨ Features
 
-*   **📚 Curated Agent Library:** Access 40+ pre-built, high-quality agents including Software Architect, Code Generator, Pirate, Yoda, and more.
-*   **🐍 Python-Powered Core:** Robust management logic handled by efficient Python scripts for listing, finding, and inspecting agents.
-*   **✅ Automated Integrity:** Built-in validation suite and auto-fixers ensure your agent library remains clean, structured, and error-free.
-*   **🏗️ Structured XML Personas:** Top-tier agents use advanced XML-based prompting strategies to enforce strict operational boundaries and output formats.
-*   **🧠 Orchestrator Mode:** Includes a "Team Lead" agent capable of analyzing tasks and recommending the best expert for the job.
-
----
-
-## 📦 Installation
-
-This extension is designed to be installed directly into your Gemini CLI extensions directory.
-
-### Prerequisites
-*   Gemini CLI installed and configured.
-*   Python 3.8 or higher installed on your system.
-
-### Setup
-1.  Navigate to your extensions directory:
-    ```bash
-    cd ~/.gemini/extensions/
-    ```
-2.  Clone this repository:
-    ```bash
-    git clone https://github.com/billlzzz18/bl1nk-agents-manager.git agents-manager
-    ```
-3.  The extension is now active. Verify installation by listing available agents:
-    ```bash
-    gemini /system-agent
-    ```
+- **📚 Extensive Agent Library**: Access 48+ pre-built, high-quality agents including Software Architect, Code Generator, Cloudflare specialist, Code Reviewer, and more.
+- **⚡ High-Performance Core**: Built on Rust with Tokio async runtime for concurrent operations.
+- **🪝 Advanced Hook System**: 35+ hooks for context injection, monitoring, recovery, and automation.
+- **🔄 Dual-Protocol Support**: MCP (Model Context Protocol) for CLI integration and internal agent communication.
+- **📦 Modular Architecture**: Clean separation between agents, hooks, filesystem, search, and session management.
+- **🎯 Specialized Workflows**: Dedicated agents for code review, architecture planning, research, documentation, and full-stack development.
+- **🔧 Extensible Design**: Easy addition of custom agents and hooks with comprehensive metadata.
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. List Available Agents
-View all built-in and custom agents in a clean, categorized table.
+### Installation
+
+1. Navigate to your Gemini CLI extensions directory:
+
+   ```bash
+   cd ~/.gemini/extensions/
+   ```
+
+2. Clone this repository:
+
+   ```bash
+   git clone https://github.com/billlzzz18/bl1nk-agents-manager.git
+   cd bl1nk-agents-manager
+   ```
+
+3. Build the project:
+
+   ```bash
+   just build
+   ```
+
+### Usage
+
+List all available agents:
+
 ```bash
 /system-agent
 ```
 
-### 2. Inspect an Agent
-See the full profile, personality, use cases, and description for a specific agent.
+Get detailed information about an agent:
+
 ```bash
 /system-agent:info architect
 ```
 
-### 3. Switch Persona
-Generate the commands needed to switch your active agent.
+Switch to a specific agent:
+
 ```bash
 /system-agent:switch pirate
 ```
-*Follow the on-screen instructions to export the environment variable and restart your session.*
+
+Create a new agent:
+
+```bash
+/system-agent:new
+```
 
 ---
 
-## 🧠 Core Agent Profiles
+## 🧠 Available Agents
 
-We have optimized our top-tier agents with structured XML prompting for maximum reliability.
+### Engineering & Development
 
-| ID | Name | Role | Strengths |
-| :--- | :--- | :--- | :--- |
-| **`orchestrator`** | **Team Lead** | Router | Analyzes complex tasks and delegates them to the right expert. |
-| **`architect`** | **Software Architect** | Planner | Research, system design, Mermaid diagrams. *Strictly no coding.* |
-| **`code-generator`** | **Code Generator** | Implementer | Production-ready, clean code. *Minimal chatter.* |
-| **`creative-writer`** | **Creative Writer** | Artist | Poetry, prose, storytelling, and literary adaptation. |
-| **`pirate`** | **Pirate Assistant** | Fun | Technical help delivered in an authentic swashbuckling dialect. |
+| Agent | Description |
+|-------|-------------|
+| [Architect](agents/architect.md) | Software architecture and design planning |
+| [Code Generator](agents/code-generator.md) | Rapid, clean code generation |
+| [Code Reviewer](agents/code-reviewer.md) | Bug detection and code quality |
+| [Code Explorer](agents/code-explorer.md) | Deep codebase analysis |
+| [Code Architect](agents/code-architect.md) | Feature architecture design |
+| [Cloudflare](agents/cloudflare.md) | Cloudflare Workers and Agents |
+| [Fullstack Dev](agents/fullstack-dev.md) | Full-stack application development |
+| [Orchestrator](agents/orchestrator.md) | Task delegation and routing |
+
+### Research & Analysis
+
+| Agent | Description |
+|-------|-------------|
+| [Codebase Analyzer](agents/codebase-analyzer.md) | Implementation detail analysis |
+| [Codebase Locator](agents/codebase-locator.md) | File and component discovery |
+| [Codebase Pattern Finder](agents/codebase-pattern-finder.md) | Similar implementation search |
+| [Research Analyzer](agents/research-analyzer.md) | Research document analysis |
+| [Thoughts Analyzer](agents/thoughts-analyzer.md) | Deep research on topics |
+| [Web Search Researcher](agents/web-search-researcher.md) | Web content research |
+
+### Documentation & Planning
+
+| Agent | Description |
+|-------|-------------|
+| [Docbot Pro](agents/docbot-pro.md) | Enterprise documentation |
+| [Docs Researcher](agents/docs-researcher.md) | Library documentation |
+| [Insight Documenter](agents/insight-documenter.md) | Technical breakthrough docs |
+| [Plan Implementation Reviewer](agents/plan-implementation-reviewer.md) | Plan validation |
+
+### Utilities & Tools
+
+| Agent | Description |
+|-------|-------------|
+| [Agent Creator](agents/agent-creator.md) | Create new agents |
+| [Command Creator](agents/command-creator.md) | Create Claude Code commands |
+| [Skill Creator](agents/skill-creator.md) | Create new skills |
+| [Skill Reviewer](agents/skill-reviewer.md) | Skill quality review |
+| [Plugin Validator](agents/plugin-validator.md) | Plugin structure validation |
+| [Task Management](agents/task-management.md) | Task tracking and context |
+| [UI Engineer](agents/ui-engineer.md) | Frontend/UI development |
+
+### Creative & Entertainment
+
+| Agent | Description |
+|-------|-------------|
+| [Creative Writer](agents/creative-writer.md) | Poetry, prose, storytelling |
+| [Pirate](agents/pirate.md) | Pirate dialect assistant |
+| [Yoda](agents/yoda.md) | Yoda-speak assistant |
+| [Shakespeare](agents/shakespeare.md) | Shakespearean English |
+| [Cowboy](agents/cowboy.md) | Western dialect |
+| [Gen Z](agents/gen-z.md) | Gen Z slang |
+| [Comedian](agents/comedian.md) | Dad jokes |
 
 ---
 
-## ⚙️ Configuration
+## 🏗️ Architecture
 
-### Adding Custom Agents
-You can extend the library with your own private agents.
+```
+bl1nk-agents-manager/
+├── agents/                 # Agent definitions (48+ agents)
+│   ├── *.md               # Agent system prompts
+│   └── agents.json        # Agent registry
+├── commands/               # CLI command definitions
+│   ├── system-agent.toml   # Main /system-agent command
+│   └── agent/              # Subcommands
+├── crates/
+│   ├── core/              # Core library
+│   │   └── src/
+│   │       ├── lib.rs     # Main library entry
+│   │       ├── agents/    # Agent system (16 modules)
+│   │       ├── hooks/     # Hook system (35+ hooks)
+│   │       ├── mcp/       # MCP protocol
+│   │       ├── session/   # Session management
+│   │       ├── filesystem/ # File operations
+│   │       ├── search/    # Conversation search
+│   │       ├── projects/   # Project management
+│   │       ├── adapters/   # Protocol adapters
+│   │       ├── config/    # Configuration
+│   │       ├── rpc/       # RPC handling
+│   │       └── events/    # Event system
+│   └── server/             # HTTP/Rocket server
+├── skills/                 # AI skill definitions
+├── scripts/                # Python management scripts
+├── docs/                   # Documentation
+└── justfile               # Build commands
+```
 
-1.  Create the `custom/` directory in the extension root if it doesn't exist.
-2.  Create a new `.md` file (e.g., `custom/my-specialist.md`).
-3.  Add the required YAML frontmatter:
-    ```markdown
-    ---
-    name: my-specialist
-    description: A brief description of what this agent does.
-    category: engineering
-    ---
+### Core Components
 
-    Your system prompt goes here...
-    ```
-4.  Run `/system-agent` to verify it has been detected.
+1. **Agent System** (`crates/core/src/agents/`):
+   - `register.rs`: Agent registry and management
+   - `router.rs`: Intelligent agent routing
+   - `executor.rs`: Task execution
+   - `orchestrator.rs`: Multi-agent coordination
+   - `expert.rs`, `researcher.rs`, `explorer.rs`: Specialized agents
+
+2. **Hooks System** (`crates/core/src/hooks/`):
+   - `todo_continuation_enforcer.rs`: Task continuity
+   - `context_window_monitor.rs`: Memory monitoring
+   - `directory_agents_injector.rs`: Context injection
+   - `ralph_loop.rs`: Loop detection and recovery
+   - `edit_error_recovery.rs`: Error recovery
+   - 30+ more hooks for various purposes
+
+3. **Session Management** (`crates/core/src/session/`):
+   - Process lifecycle management
+   - Backend session handling
+   - Message routing
+
+4. **Filesystem** (`crates/core/src/filesystem/`):
+   - Cross-platform file operations
+   - Git integration
+   - Path normalization
+
+---
+
+## 🪝 Hooks System
+
+Bl1nk includes 35+ hooks for advanced automation and monitoring:
+
+### Context & Injection
+
+| Hook | Purpose |
+|------|---------|
+| `directory_agents_injector` | Inject agent context from directory |
+| `directory_readme_injector` | Inject README context |
+| `compaction_context_injector` | Context compaction |
+| `rules_injector` | Rule injection |
+| `ralph_loop` | Loop detection and recovery |
+
+### Monitoring & Recovery
+
+| Hook | Purpose |
+|------|---------|
+| `context_window_monitor` | Memory usage monitoring |
+| `session_recovery` | Session recovery |
+| `anthropic_context_window_limit_recovery` | Claude context recovery |
+| `empty_task_response_detector` | Detect empty responses |
+| `edit_error_recovery` | Recover from edit errors |
+
+### Task Management
+
+| Hook | Purpose |
+|------|---------|
+| `todo_continuation_enforcer` | Enforce TODO completion |
+| `category_skill_reminder` | Category/skill reminders |
+| `task_resume_info` | Task resumption info |
+| `start_work` | Work session startup |
+
+### Development Tools
+
+| Hook | Purpose |
+|------|---------|
+| `comment_checker` | Check for TODO comments |
+| `tool_output_truncator` | Truncate long outputs |
+| `thinking_block_validator` | Validate thinking blocks |
+| `question_label_truncator` | Truncate question labels |
 
 ---
 
 ## 🛠️ Development
 
+### Prerequisites
+
+- Rust 1.70+
+- Python 3.8+ (for management scripts)
+- Gemini CLI
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/billlzzz18/bl1nk-agents-manager.git
+cd bl1nk-agents-manager
+
+# Install development tools
+just setup
+
+# Build the project
+just build
+
+# Run tests
+just test
+```
+
+### Available Commands
+
+```bash
+just build          # Standard release build
+just build-bundled  # Build with bundled PMAT
+just run            # Run the binary
+just dev            # Development mode with hot-reload
+just test           # Run all tests
+just check          # Quick compilation check
+just fmt            # Format code
+just clippy         # Run linter
+just validate-agents # Validate agent files
+just fix-agents     # Fix agent metadata
+```
+
 ### Project Structure
-The extension uses a hybrid architecture for performance and maintainability:
 
-```text
-/
-├── gemini-extension.json   # Manifest file
-├── agents/                 # Built-in agent definitions (*.md + agents.json)
-├── custom/                 # Directory for user-defined agents
-├── commands/               # TOML entry points for CLI commands
-└── scripts/                # Python logic core
-    ├── agent_manager.py    # Main logic for CLI commands
-    ├── validate_agents.py  # CI/CD integrity checker
-    └── fix_agents.py       # Auto-repair tool for metadata
-```
-
-### Running Tests
-To ensure the integrity of the agent library:
-
-```bash
-# Validate all agents (Frontmatter & Registry check)
-python3 scripts/validate_agents.py
-```
-
-### Auto-Fixing Issues
-If you add new agents manually and don't want to update `agents.json` by hand:
-
-```bash
-# Automatically detects new files, fixes frontmatter, and updates registry
-python3 scripts/fix_agents.py
-```
-
----
-
-## ❓ Troubleshooting
-
-**Q: I switched agents but nothing changed?**
-A: Switching agents requires restarting the Gemini CLI session. Ensure you ran the `export` command provided by `/system-agent:switch` and then restarted the tool.
-
-**Q: My custom agent isn't showing up.**
-A: Ensure your file is in the `custom/` folder and ends with `.md`. Try running `python3 scripts/fix_agents.py` to automatically register it.
-
-**Q: `python3` command not found.**
-A: This extension relies on Python 3. Please install it and ensure it's in your system PATH.
+- `crates/core/src/agents/mod.rs` - Agent system (16 modules)
+- `crates/core/src/hooks/mod.rs` - Hook system (35+ hooks)
+- `crates/core/src/mcp/mod.rs` - MCP orchestrator
+- `crates/core/src/session/` - Session management
+- `crates/core/src/filesystem/` - File operations
+- `crates/core/src/search/` - Conversation search
+- `crates/core/src/projects/` - Project management
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Whether it's a new persona, a bug fix, or a feature request.
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-1.  **Fork** the repository.
-2.  **Create** a feature branch (`git checkout -b feature/new-agent`).
-3.  **Add** your changes (if adding an agent, please use the XML structure if possible).
-4.  **Validate** your changes (`python3 scripts/validate_agents.py`).
-5.  **Commit** and **Push**.
-6.  Open a **Pull Request**.
+### Adding New Agents
+
+1. Create a new `.md` file in `agents/` with YAML frontmatter
+2. Add agent metadata to `agents/agents.json`
+3. Run `just validate-agents` to verify
+
+### Adding New Hooks
+
+1. Create a new module in `crates/core/src/hooks/`
+2. Implement the hook interface
+3. Register in `crates/core/src/hooks/mod.rs`
 
 ---
 
@@ -187,4 +329,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ for the Gemini CLI Community.**
+**Built with ❤️ for the AI Agent Community.**
+
+Maintained by [billlzzz18](https://github.com/billlzzz18) and contributors.

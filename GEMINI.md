@@ -1,42 +1,86 @@
-# 🤖 System Agents Manager Extension
+# 🤖 Bl1nk Agents Manager Extension
 
 **Version:** 0.2.0
 **Author:** billlzzz18 <team@bl1nk.site>
 **Extension ID:** `bl1nk-agents`
 
-This extension provides a powerful framework for managing and using specialized **System Agents** within the Gemini CLI. It allows users to switch between different personas (e.g., Software Architect, Creative Writer, Pirate) by swapping the underlying system prompt.
+This extension provides a powerful framework for managing and using specialized **System Agents** within the Gemini CLI. It allows users to switch between different personas (e.g., Software Architect, Code Generator, Creative Writer) by swapping the underlying system prompt.
 
 ---
 
 ## 🌟 What are System Agents?
 
-System Agents are specialized `system.md` files that define how the Gemini CLI behaves. Instead of a generic assistant, you can load a specific persona with expert knowledge, unique speech patterns, or strict behavioral constraints.
+System Agents are specialized agent definitions that define how the Gemini CLI behaves. Instead of a generic assistant, you can load a specific persona with expert knowledge, unique speech patterns, or strict behavioral constraints.
 
 This extension provides:
-1.  **A Curated Library**: High-quality, pre-tested agents for engineering, writing, and entertainment.
-2.  **Management Commands**: CLI tools to list, inspect, and switch between agents.
-3.  **Extensibility**: A structure to add your own custom agents.
+
+1. **A Curated Library**: 48+ high-quality, pre-tested agents for engineering, writing, research, and entertainment.
+2. **Management Commands**: CLI tools to list, inspect, switch, and create agents.
+3. **Extensibility**: A structure to add your own custom agents.
+4. **Hooks System**: 35+ hooks for automation and context injection.
 
 ---
 
 ## 🎭 Available Agents
 
-The extension comes with a built-in library of agents located in the `agents/` directory:
+The extension comes with a built-in library of agents located in the `agents/` directory.
 
 ### 🛠️ Engineering & Development
-*   **Software Architect** (`architect`): Focuses on design, patterns, and documentation. Does *not* write implementation code.
-*   **Code Generator** (`code-generator`): Streamlined, efficient coder. Minimal chatter, maximum code.
 
-### ✍️ Creative
-*   **Creative Writer** (`creative-writer`): Expert in poetry, prose, storytelling, and literary adaptation.
+| Agent | ID | Description |
+|-------|-----|-------------|
+| Architect | `architect` | Software architecture and design planning |
+| Code Generator | `code-generator` | Rapid, clean code generation |
+| Code Reviewer | `code-reviewer` | Bug detection and code quality |
+| Code Explorer | `code-explorer` | Deep codebase analysis |
+| Code Architect | `code-architect` | Feature architecture design |
+| Cloudflare | `cloudflare` | Cloudflare Workers and Agents |
+| Fullstack Dev | `fullstack-dev` | Full-stack application development |
+| Orchestrator | `orchestrator` | Task delegation and routing |
+
+### 🔍 Research & Analysis
+
+| Agent | ID | Description |
+|-------|-----|-------------|
+| Codebase Analyzer | `codebase-analyzer` | Implementation detail analysis |
+| Codebase Locator | `codebase-locator` | File and component discovery |
+| Codebase Pattern Finder | `codebase-pattern-finder` | Similar implementation search |
+| Research Analyzer | `research-analyzer` | Research document analysis |
+| Thoughts Analyzer | `thoughts-analyzer` | Deep research on topics |
+| Web Search Researcher | `web-search-researcher` | Web content research |
+
+### 📝 Documentation & Planning
+
+| Agent | ID | Description |
+|-------|-----|-------------|
+| Docbot Pro | `docbot-pro` | Enterprise documentation |
+| Docs Researcher | `docs-researcher` | Library documentation |
+| Insight Documenter | `insight-documenter` | Technical breakthrough docs |
+| Plan Implementation Reviewer | `plan-implementation-reviewer` | Plan validation |
+
+### 🛠️ Utilities & Tools
+
+| Agent | ID | Description |
+|-------|-----|-------------|
+| Agent Creator | `agent-creator` | Create new agents |
+| Command Creator | `command-creator` | Create Claude Code commands |
+| Skill Creator | `skill-creator` | Create new skills |
+| Skill Reviewer | `skill-reviewer` | Skill quality review |
+| Plugin Validator | `plugin-validator` | Plugin structure validation |
+| Task Management | `task-management` | Task tracking and context |
+| UI Engineer | `ui-engineer` | Frontend/UI development |
 
 ### 🎪 Entertainment & Comedy
-*   **Dad Joke Comedian** (`comedian`): Responds to everything with a dad joke.
-*   **Pirate** (`pirate`): Technical help delivered in authentic pirate dialect.
-*   **Shakespeare** (`shakespeare`): Codes and speaks in iambic pentameter/Elizabethan English.
-*   **Yoda** (`yoda`): Helpful he is. Code he will fix.
-*   **Cowboy** (`cowboy`): Folksy wisdom and straight-shooting technical advice.
-*   **Gen Z** (`gen-z`): Technical support, no cap.
+
+| Agent | ID | Description |
+|-------|-----|-------------|
+| Creative Writer | `creative-writer` | Poetry, prose, storytelling |
+| Pirate | `pirate` | Pirate dialect assistant |
+| Yoda | `yoda` | Yoda-speak assistant |
+| Shakespeare | `shakespeare` | Shakespearean English |
+| Cowboy | `cowboy` | Western dialect |
+| Gen Z | `gen-z` | Gen Z slang |
+| Comedian | `comedian` | Dad jokes |
 
 ---
 
@@ -45,12 +89,12 @@ The extension comes with a built-in library of agents located in the `agents/` d
 This extension registers the `/system-agent` command namespace.
 
 | Command | Description | Usage |
-| :--- | :--- | :--- |
-| **`/system-agent`** | List all available agents (built-in and custom). | `/system-agent` |
-| **`/system-agent:info`** | Get detailed metadata and description for a specific agent. | `/system-agent:info <agent_id>` |
-| **`/system-agent:switch`** | Get instructions and commands to switch your active agent. | `/system-agent:switch <agent_id>` |
-| **`/system-agent:examples`** | Show example prompts and use cases for an agent. | `/system-agent:examples <agent_id>` |
-| **`/system-agent:new`** | Interactive wizard to create a new custom agent. | `/system-agent:new` |
+|---------|-------------|-------|
+| `/system-agent` | List all available agents | `/system-agent` |
+| `/system-agent:info` | Get detailed metadata for an agent | `/system-agent:info <agent_id>` |
+| `/system-agent:switch` | Get instructions to switch agents | `/system-agent:switch <agent_id>` |
+| `/system-agent:examples` | Show example prompts for an agent | `/system-agent:examples <agent_id>` |
+| `/system-agent:new` | Interactive wizard to create a new agent | `/system-agent:new` |
 
 ---
 
@@ -62,23 +106,26 @@ The `/system-agent:switch` command will generate the exact commands you need.
 
 **Common Methods:**
 
-1.  **Temporary (One-off session):**
-    ```bash
-    GEMINI_SYSTEM_MD=~/.gemini/extensions/agents-manager/agents/pirate.md gemini
-    ```
+1. **Temporary (One-off session):**
 
-2.  **Persistent (Until shell exit):**
-    ```bash
-    export GEMINI_SYSTEM_MD=~/.gemini/extensions/agents-manager/agents/architect.md
-    gemini
-    ```
+   ```bash
+   GEMINI_SYSTEM_MD=~/.gemini/extensions/agents-manager/agents/pirate.md gemini
+   ```
 
-3.  **Aliases (Recommended):**
-    Add these to your `.bashrc` or `.zshrc`:
-    ```bash
-    alias gemini-pirate="GEMINI_SYSTEM_MD=~/.gemini/extensions/agents-manager/agents/pirate.md gemini"
-    alias gemini-code="GEMINI_SYSTEM_MD=~/.gemini/extensions/agents-manager/agents/code-generator.md gemini"
-    ```
+2. **Persistent (Until shell exit):**
+
+   ```bash
+   export GEMINI_SYSTEM_MD=~/.gemini/extensions/agents-manager/agents/architect.md
+   gemini
+   ```
+
+3. **Aliases (Recommended):**
+   Add these to your `.bashrc` or `.zshrc`:
+
+   ```bash
+   alias gemini-pirate="GEMINI_SYSTEM_MD=~/.gemini/extensions/agents-manager/agents/pirate.md gemini"
+   alias gemini-code="GEMINI_SYSTEM_MD=~/.gemini/extensions/agents-manager/agents/code-generator.md gemini"
+   ```
 
 ---
 
@@ -86,20 +133,62 @@ The `/system-agent:switch` command will generate the exact commands you need.
 
 For developers extending this project:
 
-```text
+```
 /
 ├── gemini-extension.json   # Extension manifest
 ├── agents/                 # Built-in agent definitions
-│   ├── agents.json         # Registry of built-in agents
-│   ├── *.md                # The actual system prompt files
-│   └── README.md           # Documentation for agents
-└── commands/               # Command definitions (.toml)
-    ├── system-agent.toml   # Main /system-agent command
-    └── agent/              # Subcommands (:switch, :info, etc.)
+│   ├── agents.json         # Registry of 48+ agents
+│   ├── *.md               # Agent system prompt files
+│   └── README.md          # Agent documentation
+├── commands/              # Command definitions (.toml)
+│   ├── system-agent.toml  # Main /system-agent command
+│   └── agent/             # Subcommands (:switch, :info, etc.)
+├── crates/
+│   ├── core/              # Core library (16 agent modules, 35+ hooks)
+│   └── server/            # HTTP/Rocket server
+├── hooks/                 # Hook definitions (35+ hooks)
+├── skills/                # AI skill definitions
+└── docs/                  # Documentation
 ```
 
 ### Adding a New Agent
 
-1.  Create a new `.md` file in `agents/`.
-2.  Add the agent's metadata to `agents/agents.json`.
-3.  (Optional) If it's a "custom" user agent (not built-in), the logic in `system-agent.toml` looks for a `custom/agents.json` file relative to the extension path.
+1. Create a new `.md` file in `agents/`
+2. Add the agent's metadata to `agents/agents.json`
+3. (Optional) If it's a "custom" user agent, the logic in `system-agent.toml` looks for a `custom/agents.json` file relative to the extension path
+
+### Creating Custom Hooks
+
+1. Create a new module in `crates/core/src/hooks/`
+2. Implement the hook interface
+3. Register in `crates/core/src/hooks/mod.rs`
+
+---
+
+## 🧩 Hooks System
+
+Bl1nk includes 35+ hooks for advanced automation:
+
+### Context Injection
+
+- `directory_agents_injector` - Inject agent context from directory
+- `directory_readme_injector` - Inject README context
+- `compaction_context_injector` - Context compaction
+- `ralph_loop` - Loop detection and recovery
+
+### Monitoring & Recovery
+
+- `context_window_monitor` - Memory usage monitoring
+- `session_recovery` - Session recovery
+- `empty_task_response_detector` - Detect empty responses
+- `edit_error_recovery` - Recover from edit errors
+
+### Task Management
+
+- `todo_continuation_enforcer` - Enforce TODO completion
+- `category_skill_reminder` - Category/skill reminders
+- `task_resume_info` - Task resumption info
+
+---
+
+**Built with ❤️ for the Gemini CLI Community.**

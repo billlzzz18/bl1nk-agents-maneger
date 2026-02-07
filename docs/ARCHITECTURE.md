@@ -2,45 +2,75 @@
 
 ## System Overview
 
-Gemini MCP Proxy is a **dual-protocol orchestrator** that bridges:
-- **MCP (Model Context Protocol)** - For Gemini CLI integration
-- **ACP (Agent Client Protocol)** - For sub-agent communication
+Bl1nk Agents Manager is a **multi-agent orchestration system** built with Rust that provides:
+
+- **MCP (Model Context Protocol)** server for CLI integration
+- **48+ specialized agents** for various domains
+- **35+ hooks** for automation and context injection
+- **Session management** for backend integration
+- **Filesystem operations** with Git support
+- **Conversation search** and project management
 
 ## Core Principles
 
-### 1. Agent Community Protocol (ACP)
+### 1. Agent Specialization
 
-**Philosophy**: Every agent is both a server and a client.
+Each agent is designed for a specific domain, providing expert-level responses:
 
-```
+```text
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Gemini    │────▶│    Proxy    │────▶│    Qwen     │
-│     CLI     │◀────│ Orchestrator│◀────│   Agent     │
+│   User      │────▶│  Bl1nk      │────▶│  Specialist │
+│   Query     │     │  Orchestrator│    │  Agent      │
 └─────────────┘     └─────────────┘     └─────────────┘
-     MCP                MCP + ACP            ACP
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │   Router    │
+                    │  (Selects   │
+                    │   correct   │
+                    │   agent)    │
+                    └─────────────┘
 ```
 
-All communication uses **JSON-RPC 2.0** regardless of protocol.
+### 2. Event-Driven Hooks
 
-### 2. Dual-Mode Operation
+The hooks system allows intercepting and modifying behavior:
 
-The proxy operates in two modes simultaneously:
+```
+┌─────────────────────────────────────────────────────────┐
+│                      Hook Chain                          │
+├─────────────────────────────────────────────────────────┤
+│  Request → Hook1 → Hook2 → HookN → Agent Processing    │
+│              ↓         ↓         ↓                      │
+│          Modify    Inject    Monitor                   │
+│          Request   Context   State                    │
+└─────────────────────────────────────────────────────────┘
+```
 
-**Mode 1: MCP Server**
-- Listens on stdio
-- Exposes tools to Gemini CLI
-- Uses PMCP (Pragmatic MCP) SDK
+### 3. Type-Safe Protocol
 
-**Mode 2: ACP Client**
-- Spawns sub-agent processes
-- Sends JSON-RPC requests over stdin
-- Reads JSON-RPC responses from stdout
+All MCP communication uses JSON-RPC 2.0 with type-safe schemas:
+
+```rust
+// All parameters validated at runtime
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct DelegateTaskArgs {
+    #[schemars(description = "Type of task")]
+    pub task_type: String,
+    
+    #[schemars(description = "Prompt for agent")]
+    pub prompt: String,
+    
+    #[schemars(description = "Optional agent ID")]
+    pub agent_id: Option<String>,
+}
+```
 
 ## Component Architecture
 
 ### Layer 1: MCP Server (Public Interface)
 
-```rust
+```
 ┌─────────────────────────────────────┐
 │       pmcp::ServerBuilder           │
 ├─────────────────────────────────────┤
@@ -55,7 +85,7 @@ The proxy operates in two modes simultaneously:
 
 ### Layer 2: Orchestration Logic
 
-```rust
+```
 ┌─────────────────────────────────────┐
 │        Orchestrator                 │
 ├─────────────────────────────────────┤
@@ -69,7 +99,7 @@ The proxy operates in two modes simultaneously:
 
 ### Layer 3: Agent Management
 
-```rust
+```
 ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
 │  AgentRegistry   │  │   AgentRouter    │  │  AgentExecutor   │
 ├──────────────────┤  ├──────────────────┤  ├──────────────────┤
@@ -79,55 +109,71 @@ The proxy operates in two modes simultaneously:
 └──────────────────┘  └──────────────────┘  └──────────────────┘
 ```
 
-### Layer 4: Rate Limiting
+### Layer 4: Hook System
 
-```rust
-┌─────────────────────────────────────┐
-│      RateLimitTracker               │
-├─────────────────────────────────────┤
-│  Per-agent tracking:                │
-│  • Requests/minute                  │
-│  • Requests/day                     │
-│  • Auto-reset timers                │
-└─────────────────────────────────────┘
+```
+┌─────────────────────────────────────────────────────────┐
+│                    HookRegistry                         │
+├─────────────────────────────────────────────────────────┤
+│  Context Injection:                                     │
+│  • directory_agents_injector                            │
+│  • directory_readme_injector                            │
+│  • compaction_context_injector                          │
+│  • rules_injector                                       │
+├─────────────────────────────────────────────────────────┤
+│  Monitoring & Recovery:                                  │
+│  • context_window_monitor                               │
+│  • session_recovery                                     │
+│  • empty_task_response_detector                         │
+│  • edit_error_recovery                                  │
+├─────────────────────────────────────────────────────────┤
+│  Task Management:                                       │
+│  • todo_continuation_enforcer                            │
+│  • category_skill_reminder                              │
+│  • task_resume_info                                     │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ## Data Flow
 
-### Synchronous Task Execution
+### Task Delegation
 
 ```
-1. Gemini CLI sends MCP request
+1. User sends MCP request
    ├─> MCP Server receives via stdio
    ├─> Parses TypedTool arguments
    └─> Validates against JSON schema
 
 2. Orchestrator processes request
-   ├─> AgentRouter selects agent
+   ├─> AgentRouter selects agent based on task_type
    ├─> RateLimitTracker checks limits
    └─> AgentExecutor spawns process
 
-3. ACP communication
-   ├─> Spawn sub-agent CLI
-   ├─> Write JSON-RPC to stdin
-   ├─> Read JSON-RPC from stdout
-   └─> Parse result
+3. Agent execution
+   ├─> Build agent prompt
+   ├─> Send to agent process
+   └─> Parse response
 
-4. Return to Gemini CLI
+4. Return result
    ├─> Format MCP response
    ├─> Send via stdio
    └─> Update task status
 ```
 
-### Background Task Execution
+### Hook Processing
 
 ```
-1. Gemini CLI → delegate_task(background: true)
-2. Proxy spawns tokio task
-3. Returns immediately with task_id
-4. Background task runs independently
-5. Results stored in registry
-6. Query via agent_status(task_id)
+Request received
+      ↓
+  Pre-process hooks (context injection)
+      ↓
+  Request validation
+      ↓
+  Agent execution
+      ↓
+  Post-process hooks (monitoring, recovery)
+      ↓
+  Response
 ```
 
 ## Configuration Architecture
@@ -136,35 +182,47 @@ The proxy operates in two modes simultaneously:
 
 ```toml
 [server]           # MCP server settings
-[main_agent]       # Gemini CLI config
-[[agents]]         # Sub-agent definitions
+host = "127.0.0.1"
+port = 3000
+
+[main_agent]       # Main agent config
+name = "gemini"
+
+[[agents]]         # Agent definitions
+id = "architect"
+name = "Architect"
+category = "engineering"
+
 [[routing.rules]]  # Task routing rules
+task_type = "code-generation"
+preferred_agents = ["code-generator"]
+
 [rate_limiting]    # Rate limit settings
-[logging]          # Log configuration
+requests_per_minute = 60
+requests_per_day = 2000
 ```
 
 ### Agent Definition
 
 ```rust
 pub struct AgentConfig {
-    id: String,              // Unique identifier
-    name: String,            // Display name
-    agent_type: String,      // "cli" | "gemini-extension"
-    command: Option<String>, // CLI command
-    args: Option<Vec<String>>,
-    rate_limit: RateLimit,
-    capabilities: Vec<String>, // e.g., ["code-generation"]
-    priority: u8,             // Higher = preferred
+    pub id: String,              // Unique identifier
+    pub name: String,            // Display name
+    pub category: AgentCategory, // Category enum
+    pub description: String,     // Human-readable description
+    pub capabilities: Vec<String>, // Task types handled
+    pub priority: u8,            // Higher = preferred
+    pub rate_limit: RateLimit,   // Rate limiting config
 }
 ```
 
-### Routing Rule
+### Hook Configuration
 
 ```rust
-pub struct RoutingRule {
-    task_type: String,        // e.g., "code-generation"
-    keywords: Vec<String>,    // Prompt matching
-    preferred_agents: Vec<String>, // Agent IDs
+pub struct HookConfig {
+    pub name: String,
+    pub enabled: bool,
+    pub options: HashMap<String, Value>,
 }
 ```
 
@@ -201,22 +259,23 @@ tokio::spawn(async move {
    - Internal errors (executor failures)
    - Custom errors (rate limits)
 
-2. **ACP Errors** (agent communication)
-   - Process spawn failures
-   - JSON-RPC parsing errors
-   - Agent-specific errors
-
-3. **Application Errors** (`anyhow::Result`)
+2. **Application Errors** (`anyhow::Result`)
    - Configuration errors
    - File system errors
-   - Network errors (future)
+   - Agent communication errors
+
+3. **Hook Errors**
+   - Hook execution failures
+   - Context injection errors
 
 ### Error Propagation
 
-```rust
+```
 MCP Request
     ↓
 TypedTool validation (pmcp::Error)
+    ↓
+Hook processing (anyhow::Result)
     ↓
 Agent execution (anyhow::Result)
     ↓
@@ -227,28 +286,81 @@ MCP Response (error field)
 
 ## Performance Considerations
 
-### PMCP Advantages
+### Async Runtime
 
-- **16x faster** than TypeScript SDK
-- **50x lower memory** usage
-- SIMD-optimized parsing
-- Zero-copy where possible
+- Built on **Tokio** for high-performance async I/O
+- Efficient task scheduling
+- Non-blocking operations throughout
 
 ### Design Choices
 
 1. **Arc over Mutex**: Allows concurrent reads
 2. **RwLock pattern**: Optimizes read-heavy workloads
-3. **Tokio runtime**: Efficient async I/O
-4. **Process spawning**: Isolation + parallel execution
+3. **Async I/O**: Efficient network and file operations
+4. **Process isolation**: Better security and stability
 
 ### Bottlenecks
 
 1. **Process spawn time** (~50-100ms)
    - Mitigation: Keep agents warm (future)
-2. **Rate limit checks** (mutex contention)
-   - Mitigation: RwLock, rarely written
-3. **JSON parsing** (CPU-bound)
-   - Mitigation: SIMD acceleration
+2. **Rate limit checks** (RwLock contention)
+   - Mitigation: Rarely written, mostly reads
+3. **File I/O** (disk-bound)
+   - Mitigation: Async file operations
+
+## Module Structure
+
+### Agent System (16 modules)
+
+| File | Purpose |
+| ------ | --------- |
+| `mod.rs` | Module exports |
+| `register.rs` | Agent registry |
+| `router.rs` | Agent routing |
+| `executor.rs` | Task execution |
+| `creator.rs` | Agent creation |
+| `types.rs` | Type definitions |
+| `orchestrator.rs` | Multi-agent coordination |
+| `expert.rs` | Expert patterns |
+| `researcher.rs` | Research agent |
+| `explorer.rs` | Code exploration |
+| `observer.rs` | Observation |
+| `consultant.rs` | Consultation |
+| `auditor.rs` | Auditing |
+| `manager.rs` | Management |
+| `planner.rs` | Planning |
+| `orchestrator_junior.rs` | Junior orchestrator |
+
+### Hook System (35+ hooks)
+
+| Category | Count | Examples |
+| ---------- | ------- | ---------- |
+| Context Injection | 5 | directory_agents_injector, rules_injector |
+| Monitoring | 4 | context_window_monitor, session_recovery |
+| Recovery | 5 | edit_error_recovery, ralph_loop |
+| Task Management | 4 | todo_continuation_enforcer |
+| Development | 4 | comment_checker, tool_output_truncator |
+| Automation | 13 | auto_update_checker, background_notification |
+
+## Security Considerations
+
+### Input Validation
+
+1. **JSON Schema**: TypedTool enforces schemas
+2. **Path validation**: Prevent directory traversal
+3. **Command injection**: Whitelist commands only
+
+### Process Isolation
+
+- Each agent runs in separate process
+- No shared memory between agents
+- Clean shutdown on errors
+
+### Rate Limiting
+
+- Prevents DoS from single agent
+- Per-agent quotas enforced
+- Transparent to users
 
 ## Future Enhancements
 
@@ -281,91 +393,6 @@ pub async fn run_http(&self, addr: SocketAddr) -> Result<()> {
 }
 ```
 
-### 4. Bidirectional ACP
-
-```rust
-// Allow agents to call back to orchestrator
-struct BidirectionalAgent {
-    stdin: ChildStdin,
-    stdout: ChildStdout,
-    callback: Arc<dyn Fn(Request) -> Response>,
-}
-```
-
-### 5. Metrics & Observability
-
-```rust
-struct Metrics {
-    tasks_completed: AtomicU64,
-    tasks_failed: AtomicU64,
-    avg_latency: AtomicF64,
-}
-```
-
-## Testing Strategy
-
-### Unit Tests
-
-- Config parsing and validation
-- Agent selection logic
-- Rate limit enforcement
-
-### Integration Tests
-
-- MCP server ↔ PMCP SDK
-- Process spawning
-- ACP communication
-
-### Property Tests (Future)
-
-```rust
-#[cfg(test)]
-proptest! {
-    fn routing_always_selects_valid_agent(
-        task_type: String,
-        agents: Vec<AgentConfig>
-    ) {
-        // Property: selected agent must have matching capability
-    }
-}
-```
-
-## Security Considerations
-
-### Input Validation
-
-1. **JSON Schema**: TypedTool enforces schemas
-2. **Path validation**: Prevent directory traversal
-3. **Command injection**: Whitelist commands only
-
-### Rate Limiting
-
-- Prevents DoS from single agent
-- Per-agent quotas enforced
-- Transparent to users
-
-### Process Isolation
-
-- Each agent runs in separate process
-- No shared memory
-- Clean shutdown on errors
-
 ---
 
-## Appendix: Protocol Comparison
-
-| Feature | MCP | ACP |
-|---------|-----|-----|
-| Purpose | AI ↔ Editor | Agent ↔ Agent |
-| Protocol | JSON-RPC 2.0 | JSON-RPC 2.0 |
-| Transport | stdio, HTTP, WS | stdio, AsyncRead/Write |
-| Auth | OAuth, Bearer | Session tokens |
-| Bidirectional | No | Yes |
-| Tool calling | Yes | Yes |
-| Resources | Yes | Limited |
-
-Both protocols use the same underlying JSON-RPC 2.0, making interoperability natural.
-
----
-
-**Last updated**: 2025-01-28
+**Last updated**: 2026-02-06
