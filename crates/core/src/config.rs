@@ -1,11 +1,15 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-pub mod handler;
 pub mod extra_types;
+pub mod handler;
+
+use crate::agents::types::AgentConfig;
+#[cfg(feature = "bundle-pmat")]
+use crate::agents::types::RateLimit;
+pub use crate::configs::schema::*;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {
@@ -25,7 +29,9 @@ pub struct ServerConfig {
     pub max_concurrent_tasks: usize,
 }
 
-fn default_max_concurrent() -> usize { 5 }
+fn default_max_concurrent() -> usize {
+    5
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MainAgentConfig {
@@ -35,43 +41,7 @@ pub struct MainAgentConfig {
     pub session_token_path: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AgentConfig {
-    pub id: String,
-    pub name: String,
-    #[serde(rename = "type")]
-    pub agent_type: String,
-    pub command: Option<String>,
-    pub args: Option<Vec<String>>,
-    pub extension_name: Option<String>,
-    #[serde(default)]
-    pub rate_limit: RateLimit,
-    pub capabilities: Vec<String>,
-    #[serde(default)]
-    pub priority: u8,
-    #[serde(default)]
-    pub enabled: bool,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct RateLimit {
-    #[serde(default = "default_rpm")]
-    pub requests_per_minute: u32,
-    #[serde(default = "default_rpd")]
-    pub requests_per_day: u32,
-}
-
-fn default_rpm() -> u32 { 60 }
-fn default_rpd() -> u32 { 2000 }
-
-impl Default for RateLimit {
-    fn default() -> Self {
-        Self {
-            requests_per_minute: 60,
-            requests_per_day: 2000,
-        }
-    }
-}
+// AgentConfig and RateLimit are defined in crate::agents::types
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RoutingConfig {
@@ -81,18 +51,13 @@ pub struct RoutingConfig {
 }
 
 /// Routing tier determines rule priority
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum RoutingTier {
+    #[default]
     Default,
     User,
     Admin,
-}
-
-impl Default for RoutingTier {
-    fn default() -> Self {
-        RoutingTier::Default
-    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -101,7 +66,7 @@ pub struct RoutingRule {
     pub keywords: Vec<String>,
     pub preferred_agents: Vec<String>,
     #[serde(default)]
-    pub priority: u16,  // 0-999
+    pub priority: u16, // 0-999
     #[serde(default)]
     pub enabled: bool,
 }
@@ -124,11 +89,15 @@ pub struct RateLimitingConfig {
     pub strategy: String,
     #[serde(default = "default_true")]
     pub track_usage: bool,
-    pub usage_db_path: String,
+    pub usage_db_path: Option<String>,
 }
 
-fn default_strategy() -> String { "round-robin".to_string() }
-fn default_true() -> bool { true }
+fn default_strategy() -> String {
+    "round-robin".to_string()
+}
+fn default_true() -> bool {
+    true
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LoggingConfig {
@@ -138,57 +107,11 @@ pub struct LoggingConfig {
     pub output: String,
 }
 
-fn default_log_level() -> String { "info".to_string() }
-fn default_output() -> String { "stdout".to_string() }
-
-// --- Added for Config Handler ---
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct CategoryConfig {
-    pub model: Option<String>,
-    pub temperature: Option<f32>,
-    pub top_p: Option<f32>,
-    pub maxTokens: Option<usize>, // CamelCase mapping from TS
-    pub tools: Option<Vec<String>>,
-    pub thinking: Option<bool>,
-    pub reasoningEffort: Option<String>,
-    pub textVerbosity: Option<String>,
+fn default_log_level() -> String {
+    "info".to_string()
 }
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct OhMyOpenCodeConfig {
-    pub disabled_agents: Option<Vec<String>>,
-    pub agents: HashMap<String, serde_json::Value>,
-    pub categories: Option<HashMap<String, CategoryConfig>>,
-    pub git_master: Option<bool>,
-    pub browser_automation_engine: Option<BrowserConfig>,
-    pub sisyphus_agent: Option<SisyphusConfig>,
-    pub disabled_mcps: Option<Vec<String>>,
-    pub disabled_commands: Option<Vec<String>>,
-    pub claude_code: Option<ClaudeCodeConfig>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct ClaudeCodeConfig {
-    pub plugins: Option<bool>,
-    pub plugins_override: Option<Vec<String>>,
-    pub agents: Option<bool>,
-    pub skills: Option<bool>,
-    pub mcp: Option<bool>,
-    pub commands: Option<bool>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct BrowserConfig {
-    pub provider: String,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct SisyphusConfig {
-    pub disabled: bool,
-    pub default_builder_enabled: bool,
-    pub planner_enabled: bool,
-    pub replace_plan: bool,
+fn default_output() -> String {
+    "stdout".to_string()
 }
 
 impl Config {
@@ -196,16 +119,16 @@ impl Config {
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
         let content = fs::read_to_string(path.as_ref())
             .with_context(|| format!("Failed to read config file: {:?}", path.as_ref()))?;
-        
-        let mut config: Config = toml::from_str(&content)
-            .context("Failed to parse TOML config")?;
-        
+
+        #[allow(unused_mut)]
+        let mut config: Config = toml::from_str(&content).context("Failed to parse TOML config")?;
+
         // Inject bundled PMAT agent if feature is enabled
         #[cfg(feature = "bundle-pmat")]
         {
             config.inject_bundled_pmat();
         }
-        
+
         config.validate()?;
         Ok(config)
     }
@@ -213,14 +136,14 @@ impl Config {
     /// Load config from default locations
     pub fn load_default() -> Result<Self> {
         let config_paths = Self::default_config_paths();
-        
+
         for path in config_paths {
             if path.exists() {
                 tracing::info!("Loading config from: {:?}", path);
                 return Self::load(&path);
             }
         }
-        
+
         anyhow::bail!(
             "No config file found. Create ~/.config/bl1nk-agents-manager/config.toml or use --config"
         );
@@ -229,18 +152,18 @@ impl Config {
     /// Default config file locations (in order of priority)
     fn default_config_paths() -> Vec<PathBuf> {
         let mut paths = Vec::new();
-        
+
         // Current directory
         paths.push(PathBuf::from("./config.toml"));
         paths.push(PathBuf::from("./.bl1nk-agents-manager.toml"));
-        
+
         // User config directory
         if let Ok(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")) {
             let home_path = PathBuf::from(home);
             paths.push(home_path.join(".config/bl1nk-agents-manager/config.toml"));
             paths.push(home_path.join(".bl1nk-agents-manager.toml"));
         }
-        
+
         paths
     }
 
@@ -255,7 +178,7 @@ impl Config {
             args: None,
             extension_name: None,
             rate_limit: RateLimit {
-                requests_per_minute: 120,  // Higher limit for internal
+                requests_per_minute: 120, // Higher limit for internal
                 requests_per_day: 5000,
             },
             capabilities: vec![
@@ -265,10 +188,26 @@ impl Config {
             ],
             priority: 200,
             enabled: true,
+            description: Some("Bundled PMAT architect for internal analysis.".to_string()),
+            model: None,
+            temperature: None,
+            max_tokens: None,
+            prompt: None,
+            color: None,
+            permission: None,
+            mode: None,
+            thinking: None,
+            reasoning_effort: None,
+            text_verbosity: None,
+            skills: None,
         };
 
         // Check if already exists
-        if !self.agents.iter().any(|a| a.id == "pmat-architect-internal") {
+        if !self
+            .agents
+            .iter()
+            .any(|a| a.id == "pmat-architect-internal")
+        {
             tracing::info!("✨ Injecting bundled PMAT agent");
             self.agents.push(pmat_agent);
         }
@@ -296,9 +235,11 @@ impl Config {
 
         // Validate routing rules reference valid agents
         let agent_ids: Vec<String> = self.agents.iter().map(|a| a.id.clone()).collect();
+        let agent_set: std::collections::HashSet<&str> = agent_ids.iter().map(|s| s.as_str()).collect();
+        
         for rule in &self.routing.rules {
             for preferred_agent in &rule.preferred_agents {
-                if !agent_ids.contains(preferred_agent) {
+                if !agent_set.contains(preferred_agent.as_str()) {
                     tracing::warn!(
                         "⚠️  Routing rule references unknown agent: {} (will be skipped)",
                         preferred_agent
