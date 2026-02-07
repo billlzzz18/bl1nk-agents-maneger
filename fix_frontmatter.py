@@ -7,12 +7,16 @@ def fix_file(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    parts = content.split('---')
+    # Only treat the file as having frontmatter if it starts with a YAML delimiter
+    if not content.lstrip().startswith('---'):
+        return {}
+
+    parts = content.split('---', 2)
     if len(parts) < 3:
         return {}
 
     fm_raw = parts[1]
-    body = '---'.join(parts[2:])
+    body = parts[2]
 
     junk_data = {}
     body_lines = body.splitlines()
