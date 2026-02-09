@@ -39,7 +39,9 @@ def fix_file(filepath):
                             except:
                                 junk_data[key] = val
 
-        if is_junk:
+        # Treat as junk if we found a trailing YAML delimiter
+        # or any recognized junk fields to merge.
+        if is_junk or junk_data:
             print(f"  Merging junk from end of {filepath}: {junk_data}")
             while body_lines and (body_lines[-1].strip() == '---' or
                                  any(body_lines[-1].strip().startswith(field) for field in junk_fields) or
@@ -47,7 +49,7 @@ def fix_file(filepath):
                 body_lines.pop()
             body = '\n'.join(body_lines)
         else:
-            # If we didn't detect a proper trailing junk block, ignore any collected junk_data
+            # If we didn't detect any trailing junk block/fields, ignore junk_data
             junk_data = {}
     try:
         fm = yaml.safe_load(fm_raw)
