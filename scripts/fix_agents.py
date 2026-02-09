@@ -3,7 +3,6 @@ import os
 import json
 import glob
 import yaml
-from datetime import datetime
 
 def get_default_frontmatter(filename):
     name = filename.replace('.md', '')
@@ -56,7 +55,7 @@ def update_registry(agents_dir, json_path):
         with open(json_path, 'r') as f:
             data = json.load(f)
     except:
-        data = {'agents': [], 'metadata': {}}
+        data = {'agents': []}
         
     existing_map = {a['file']: a for a in data.get('agents', [])}
     
@@ -89,13 +88,6 @@ def update_registry(agents_dir, json_path):
     # Rebuild list
     data['agents'] = list(existing_map.values())
     
-    # Update metadata
-    if 'metadata' not in data:
-        data['metadata'] = {}
-
-    data['metadata']['total_agents'] = len(data['agents'])
-    data['metadata']['last_updated'] = datetime.now().strftime("%Y-%m-%d")
-
     # Save
     with open(json_path, 'w') as f:
         json.dump(data, f, indent=2)
@@ -108,7 +100,7 @@ def main():
     agents_dir = os.path.join(extension_root, 'agents')
     json_path = os.path.join(agents_dir, 'agents.json')
     
-    print("Auto-fixing agents and metadata...")
+    print("Auto-fixing agents...")
     count = update_registry(agents_dir, json_path)
     print(f"✅ Registered {count} agents successfully!")
 

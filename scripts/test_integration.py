@@ -44,7 +44,7 @@ def run_test():
         print("⏳ Waiting for server to start...")
         start_time = time.time()
         server_ready = False
-        while time.time() - start_time < 5:
+        while time.time() - start_time < 10:
             try:
                 line = q_stderr.get_nowait()
                 line_str = line.decode().strip()

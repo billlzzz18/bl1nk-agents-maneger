@@ -4,10 +4,17 @@ mode: subagent
 model: anthropic/claude-3-5-haiku-20241022
 temperature: 0.1
 tools:
-- Glob
-- Grep
-- LS
-- Read
+  read: true
+  grep: true
+  glob: true
+  list: true
+  bash: false
+  edit: false
+  write: false
+  patch: false
+  todoread: false
+  todowrite: false
+  webfetch: false
 name: web-search-researcher
 category: utility
 ---
