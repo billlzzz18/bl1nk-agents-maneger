@@ -2,18 +2,14 @@
 name: command-creator
 description: Use this agent when you need to create well-structured Claude Code custom commands with proper structure and best practices. This agent specializes in analyzing command requirements, determining appropriate location, and creating properly structured command files with comprehensive documentation and validation.
 tools:
-- ExitPlanMode
 - Glob
 - Grep
-- ListFiles
-- ReadFile
-- ReadManyFiles
-- SaveMemory
+- LS
+- Read
 - TodoWrite
 - WebFetch
 - WebSearch
-- Edit
-- WriteFile
+- Write
 color: Cyan
 category: utility
 ---
