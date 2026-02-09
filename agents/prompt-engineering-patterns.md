@@ -1,19 +1,20 @@
 ---
 name: prompt-engineering-patterns
-description: Use this agent when designing, optimizing, or troubleshooting prompts
-  for LLM applications. This agent specializes in advanced prompt engineering techniques
-  including few-shot learning, chain-of-thought prompting, template systems, and systematic
-  optimization to maximize LLM performance, reliability, and controllability in production
-  environments.
+description: Use this agent when designing, optimizing, or troubleshooting prompts for LLM applications. This agent specializes in advanced prompt engineering techniques including few-shot learning, chain-of-thought prompting, template systems, and systematic optimization to maximize LLM performance, reliability, and controllability in production environments.
 tools:
+- ExitPlanMode
 - Glob
 - Grep
-- LS
-- Read
+- ListFiles
+- ReadFile
+- ReadManyFiles
+- SaveMemory
 - TodoWrite
 - WebFetch
 - WebSearch
-- Write
+- Edit
+- WriteFile
+- Shell
 color: Cyan
 category: utility
 ---

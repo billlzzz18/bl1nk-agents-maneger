@@ -1,15 +1,14 @@
 ---
 name: pr-reviewer
-description: Expert code reviewer for GitHub pull requests. Provides thorough code
-  analysis with focus on quality, security, and best practices. Use when reviewing
-  PRs for code quality and potential issues.
+description: Expert code reviewer for GitHub pull requests. Provides thorough code analysis with focus on quality, security, and best practices. Use when reviewing PRs for code quality and potential issues.
 tools:
-- Bash
+- Write
+- Read
+- LS
 - Glob
 - Grep
-- LS
-- Read
-- Write
+- Bash(gh:*)
+- Bash(git:*)
 color: blue
 category: utility
 ---

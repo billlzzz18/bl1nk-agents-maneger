@@ -1,14 +1,14 @@
 ---
 name: codebase-analyzer
-description: Use this agent when you need to analyze codebase implementation details,
-  trace data flow, understand how specific components work, or get precise file:line
-  references for technical understanding. This agent specializes in explaining the
-  "how" of code implementation with surgical precision.
+description: Use this agent when you need to analyze codebase implementation details, trace data flow, understand how specific components work, or get precise file:line references for technical understanding. This agent specializes in explaining the "how" of code implementation with surgical precision.
 tools:
+- ExitPlanMode
 - Glob
 - Grep
-- LS
-- Read
+- ListFiles
+- ReadFile
+- ReadManyFiles
+- SaveMemory
 - TodoWrite
 - WebFetch
 - WebSearch

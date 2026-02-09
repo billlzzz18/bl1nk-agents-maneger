@@ -1,15 +1,14 @@
 ---
 name: github-issue-fixer
-description: GitHub issue resolution specialist. Analyzes, plans, and implements fixes
-  for GitHub issues with proper testing and PR creation. Use when fixing specific
-  GitHub issues.
+description: GitHub issue resolution specialist. Analyzes, plans, and implements fixes for GitHub issues with proper testing and PR creation. Use when fixing specific GitHub issues.
 tools:
-- Bash
+- Write
+- Read
+- LS
 - Glob
 - Grep
-- LS
-- Read
-- Write
+- Bash(gh:*)
+- Bash(git:*)
 color: orange
 category: utility
 ---

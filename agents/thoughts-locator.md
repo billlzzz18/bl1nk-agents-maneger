@@ -1,17 +1,20 @@
 ---
-description: Discovers relevant documents in thoughts/ directory (We use this for
-  all sorts of metadata storage!). This is really only relevant/needed when you're
-  in a reseaching mood and need to figure out if we have random thoughts written down
-  that are relevant to your current research task. Based on the name, I imagine you
-  can guess this is the `thoughts` equivilent of `codebase-locator`
+description: Discovers relevant documents in thoughts/ directory (We use this for all sorts of metadata storage!). This is really only relevant/needed when you're in a reseaching mood and need to figure out if we have random thoughts written down that are relevant to your current research task. Based on the name, I imagine you can guess this is the `thoughts` equivilent of `codebase-locator`
 mode: subagent
 model: anthropic/claude-opus-4-1-20250805
 temperature: 0.1
 tools:
-- Glob
-- Grep
-- LS
-- Read
+  read: true
+  grep: true
+  glob: true
+  list: true
+  bash: false
+  edit: false
+  write: false
+  patch: false
+  todoread: false
+  todowrite: false
+  webfetch: false
 name: thoughts-locator
 category: utility
 ---

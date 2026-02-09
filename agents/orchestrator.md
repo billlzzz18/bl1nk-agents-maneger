@@ -1,7 +1,6 @@
 ---
 name: orchestrator
-description: Team Lead / Router Agent. Analyzes tasks and delegates them to specialized
-  experts in the agent library.
+description: Team Lead / Router Agent. Analyzes tasks and delegates them to specialized experts in the agent library.
 category: engineering
 ---
 

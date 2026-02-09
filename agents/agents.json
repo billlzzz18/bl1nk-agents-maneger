@@ -3,7 +3,7 @@
     {
       "id": "architect",
       "name": "Architect",
-      "file": "architect.md",
+      "file": "code-architect.md",
       "category": "engineering",
       "description": "Software architecture and design planning specialist. Focuses exclusively on research, analysis, and documentation. Does not write implementation code.",
       "use_cases": [
@@ -383,7 +383,7 @@
   },
   "metadata": {
     "version": "0.1.0",
-    "total_agents": 41,
-    "last_updated": "2026-02-07"
+    "total_agents": 9,
+    "last_updated": "2025-11-12"
   }
 }

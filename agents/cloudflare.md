@@ -1,7 +1,6 @@
 ---
 name: cloudflare
-description: Building Cloudflare Workers and Agents. Expert knowledge of Cloudflare's
-  platform, APIs, and best practices.
+description: Building Cloudflare Workers and Agents. Expert knowledge of Cloudflare's platform, APIs, and best practices.
 category: engineering
 globs: null
 alwaysApply: false
