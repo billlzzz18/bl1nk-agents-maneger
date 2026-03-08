@@ -2,6 +2,7 @@ mod config;
 mod mcp;
 mod agents;
 mod rate_limit;
+mod system;
 
 use anyhow::Result;
 use clap::Parser;
@@ -33,6 +34,18 @@ struct Args {
     daemon: bool,
 }
 
+/// Application entry point that parses CLI arguments, initializes logging, loads configuration,
+/// performs system discovery, initializes the MCP orchestrator, and runs the MCP server on stdio.
+///
+/// On success the function completes with `Ok(())`; on failure it returns an error from startup
+/// operations (configuration loading, orchestrator initialization, or server runtime).
+///
+/// # Examples
+///
+/// ```no_run
+/// // Run the compiled binary:
+/// // $ bl1nk-agents-manager --config /path/to/config.toml
+/// ```
 #[tokio::main]
 async fn main() -> Result<()> {
     // Parse CLI arguments
@@ -68,6 +81,17 @@ async fn main() -> Result<()> {
 
     // Log routing tier
     tracing::info!("📊 Routing tier: {:?}", config.routing.tier);
+
+    // Perform system discovery
+    tracing::info!("🔍 Scanning system resources...");
+    match system::discovery::DiscoveryEngine::scan().await {
+        Ok(report) => {
+            if let Err(e) = system::discovery::DiscoveryEngine::save(&report).await {
+                tracing::error!("❌ Failed to save discovery report: {}", e);
+            }
+        }
+        Err(e) => tracing::error!("❌ System discovery failed: {}", e),
+    }
 
     // Initialize the orchestrator
     let orchestrator = mcp::Orchestrator::new(config).await?;
